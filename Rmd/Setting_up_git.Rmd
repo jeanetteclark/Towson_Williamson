@@ -1,0 +1,106 @@
+---
+title: "Setting_up_Git"
+author: "Nicole"
+date: "2/16/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## **Create an Rproject**
+
+-   In the File menu, select "New Project"
+-   Click "New Directory"
+-   Click "New Project"
+-   Under "Directory name" type: Projectname\_{LASTNAME}, eg: Thesis_Williamson
+-   Set "Create Project as subdirectory of:" to whatever folder you want this project to be created in using the Browse button
+-   Click "Create Project"
+
+## **Installing Git**
+
+**Only install if you know Git isn't already on your local computer**
+
+*If you are using a shared computer* and/or you are not sure if Git is already installed
+
+-   In RStudio navigate to \*Tools \> Shell...
+-   Then type "git" and press enter
+-   If seems like Git is already installed then great! You can skip the install instructions below
+-   If it throws a complaint about **Git not found** try typing "which git" if you are a Mac user or "where git" for Windows
+-   If no file path is generated then Git most likely isn't installed on the computer yet and you should *proceed to the the download instructions below*
+
+To install Git **for the first time** use the following link: [Install Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+
+-   Then restart RStudio
+
+## **Setting up Git**
+
+Before using git, you need to tell it who you are, also known as setting the global options. The only way to do this is through the command line. Newer versions of RStudio have a nice feature where you can open a terminal window in your RStudio session. Do this by selecting Tools -\> Terminal -\> New Terminal.
+
+A terminal tab should now be open where your console usually is.
+
+To set the global options, type the following into the **Terminal**, with your actual name, and press enter:
+
+    git config --global user.name "Nicole Williamson"
+
+-   Does it run?
+
+    -   YES
+
+        -   Great! Proceed to the next step
+
+    -   NO
+
+        -   RStudio can only act as a GUI front-end for Git if Git has been successfully *installed* **AND RStudio can find it.**
+
+        -   If you know its installed but the command isn't running then the instillation of unsuccessful or that its not being found.
+
+        -   To determine where the Git software is living, first open the **shell** window by going to *Tools \> Shell...*. Then type either "which git" if you are a Mac user or "where git" for Windows.
+
+        -   This should generate the file path to where Git lives on your computer and means that Git is findable. Restart RStudio and try connecting with git again
+
+        -   If it does not generate the path then you might need to manually direct RStudio to Git. From RStudio, go to *Tools \> Global Options \> Git/SVN* and if the **Git executable** box is empty/or is not navigating to the *Git executable* then click *browse* and navigate to where the Git software was installed on the computer. **see file path example below**
+
+            -   *It should read something like:*
+
+                -   "/usr/bin/git" for Mac
+                -   "C:/Program Files (x86)/Git/bin/git.exe" for Windows
+
+        -   Then restart R and try connecting with git again
+
+Note that if it ran successfully, it will look like nothing happened. We will check at the end to make sure it worked.
+
+Next, enter the following line, with the email address you used when you created your account on github.com:
+
+    git config --global user.email "gitcode@magisa.org"
+
+Note that these lines need to be run one at a time.
+
+Next, we will set our credentials to not time out for a very long time. This is related to the way that our server operating system handles credentials - not doing this will make your PAT (which we will set up soon) expire immediately on the system, even though it is actually valid for a month.
+
+Note that these lines need to be run one at a time.
+
+Next, we will set our credentials to not time out for a very long time. This is related to the way that our server operating system handles credentials - not doing this will make your PAT (which we will set up soon) expire immediately on the system, even though it is actually valid for a month.
+
+    git config --global credential.helper 'cache --timeout=10000000'
+
+Finally, check to make sure everything looks correct by entering this command, which will return the options that you have set.
+
+    git config --global --list
+
+## **GitHub Authentication**
+
+The following steps show hot to set up PAT (Personal Access Token), because it is easy to set up. *For better security and long term use, it is recommend taking the extra steps to set up SSH keys.*
+
+Steps:
+
+1.  Run `usethis::create_github_token()` in the console
+2.  In the browser window that pops up, scroll to the bottom and click "generate token." You may need to log into GitHub first.
+3.  Copy the token from the green box on the next page
+4.  Back in RStudio, run `credentials::set_github_pat()` **NOTE: do note paste token into box at this step, wait for the prompt**
+5.  Paste your token into the dialog box that pops up.
+
+## **Connecting your existing project to Github**
+
+In RStudio go to *Tools > Project options > "Git/SVN" > select "Git" for version control > select "YES" > then "YES" again

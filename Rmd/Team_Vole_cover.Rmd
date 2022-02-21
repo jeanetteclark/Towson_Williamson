@@ -1,0 +1,406 @@
+---
+title: "Team_vole_cover"
+author: "Nicole"
+date: "2/7/2022"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+============== DATA SETUP ==============
+
+Clear workspace (if desired/needed)
+```{r}
+rm(list = ls())
+```
+
+Check working directory, set new working directory if needed. 
+```{r}
+
+#setwd("C:/Users/willi/OneDrive/Documents/Towson University/Data/Cover data/Team vole")
+getwd()
+
+
+```
+
+Install/load the package libraries. **Once you have installed a package, you only need to load the library for future use.**
+```{r}
+
+#install.packages("tidyverse")
+library(tidyverse)
+
+#install.packages("ggplot2")
+library("ggplot2")
+
+#install.packages("agricolae")
+library("agricolae")
+
+#install.packages("ggpubr")
+library("ggpubr")
+
+#install.packages("ggpubr")
+library("dplyr")
+
+#install.packages("nlme")
+library("nlme")
+
+```
+
+#load in each years .csv files containing the data
+```{r}
+
+TV_2018 <- read.csv("C:/Users/willi/OneDrive/Documents/Towson University/Data/Cover data/Team vole/2018_calculated_cover.csv", header = TRUE)
+
+TV_2019 <- read.csv("C:/Users/willi/OneDrive/Documents/Towson University/Data/Cover data/Team vole/2019_calculated_cover.csv", header = TRUE)
+
+TV_2021 <- read.csv("C:/Users/willi/OneDrive/Documents/Towson University/Data/Cover data/Team vole/2021_calculated_cover.csv", header = TRUE)
+
+```
+
+#look at the data to see what it contains -- 
+*do this for each year*
+```{r}
+head(TV_2018) #opens first 6 rows
+tail(TV_2018) #opens last 6 rows
+summary(TV_2018) # gives min/max/mean/mode/median... good for seeing if there are any glaringly wrong cover values
+str(TV_2018) #tells us what data types (numbers, factors, etc) are in the data frame
+```
+
+#Then merge the years togeather into one dataset...
+*all the names of columns need to be exactly the same name (capitalization and spaces included)*
+```{r}
+
+MyMerge       <- function(x, y){
+  df            <- merge(x, y, all = TRUE)
+  rownames(df)  <- df$Row.names
+  df$Row.names  <- NULL
+  return(df)
+}
+TV_ALL           <- Reduce(MyMerge, list(TV_2018, TV_2019, TV_2021)) #list datasets here that need to be merged
+
+```
+*make sure the # of Obs in the 1st data set + the 2nd match the # of obs in the merged data set*
+
+
+
+
+============== DATA CLEANING ==============
+
+-- Check unique vales in species column to look for naming convention errors -- 
+```{r}
+unique(TV_ALL$species)
+```
+
+-- Remove any data that you will not need for the analysis  -- 
+```{r}
+#REMOVE MUSHROOMS
+TV_ALL <- TV_ALL[!TV_ALL$species == "Mushroom ", ] 
+
+#REMOVE UNKNOWN SPECIES 
+TV_ALL <- TV_ALL[!TV_ALL$species == "UNK 3", ] 
+TV_ALL <- TV_ALL[!TV_ALL$species == "unk 2", ]
+TV_ALL <- TV_ALL[!TV_ALL$species == "unk", ]
+TV_ALL <- TV_ALL[!TV_ALL$species == "Unk 2", ]
+TV_ALL <- TV_ALL[!TV_ALL$species == "unk 3", ]
+TV_ALL <- TV_ALL[!TV_ALL$species == "UNK 1", ]
+TV_ALL <- TV_ALL[!TV_ALL$species == "UNK 4", ]
+TV_ALL <- TV_ALL[!TV_ALL$species == "Unk 3", ]
+TV_ALL <- TV_ALL[!TV_ALL$species == "unk 4", ]
+TV_ALL <- TV_ALL[!TV_ALL$species == "unk 1", ]
+TV_ALL <- TV_ALL[!TV_ALL$species == "UNK 2", ]
+TV_ALL <- TV_ALL[!TV_ALL$species == "UNK 5", ]
+TV_ALL <- TV_ALL[!TV_ALL$species == "Unk 1", ]
+TV_ALL <- TV_ALL[!TV_ALL$species == "Unk 4 ", ]
+TV_ALL <- TV_ALL[!TV_ALL$species == "Unk1 ", ]
+TV_ALL <- TV_ALL[!TV_ALL$species == "Unk 3 ", ]
+TV_ALL <- TV_ALL[!TV_ALL$species == "Unk", ]
+```
+
+-- if there are naming mistakes that create duplicates (EX: "bare" vs "Bare") then rename them using the code below --
+```{r}
+#naming convention errors 
+TV_ALL$species <- recode(TV_ALL$species, "Tussock litter" = "tussock litter")
+TV_ALL$species <- recode(TV_ALL$species, "tussock litter " = "tussock litter")
+
+TV_ALL$species <- recode(TV_ALL$species, "sal ret" = "Sal ret")
+TV_ALL$species <- recode(TV_ALL$species, "sal ret?" = "Sal ret")
+TV_ALL$species <- recode(TV_ALL$species, "Sal ret " = "Sal ret")
+
+TV_ALL$species <- recode(TV_ALL$species, "arc alp" = "Arc alp")
+
+TV_ALL$species <- recode(TV_ALL$species, "Ped lep" = "Ped lap")
+TV_ALL$species <- recode(TV_ALL$species, "ped sp" = "Ped sp")
+
+TV_ALL$species <- recode(TV_ALL$species, "Pet Fri " = "Pet fri")
+```
+
+-- group things together that are currently more specific then they need to be/than is useful (EX: winter kill identified to species level can be grouped into the larger category "winterkill")
+```{r}
+#group like things together that should be group more broadly 
+
+  #winter kill
+TV_ALL$species <- recode(TV_ALL$species, "winter kill vac vit" = "winterkill")
+TV_ALL$species <- recode(TV_ALL$species, "led pal winter kill" = "winterkill")
+TV_ALL$species <- recode(TV_ALL$species, "vac vit winter kill" = "winterkill")
+TV_ALL$species <- recode(TV_ALL$species, "vac vit winter kill" = "winterkill")
+TV_ALL$species <- recode(TV_ALL$species, "winter kill" = "winterkill")
+
+  #standing dead
+TV_ALL$species <- recode(TV_ALL$species, "dead vac vit" = "std")
+TV_ALL$species <- recode(TV_ALL$species, "cas tet dead" = "std")
+TV_ALL$species <- recode(TV_ALL$species, "st. D. Cas tet" = "std")
+TV_ALL$species <- recode(TV_ALL$species, "St. D. Bet." = "std")
+TV_ALL$species <- recode(TV_ALL$species, "dead led pal" = "std")
+TV_ALL$species <- recode(TV_ALL$species, "led pal dead" = "std")
+TV_ALL$species <- recode(TV_ALL$species, "dead shrub(bet)?" = "std")
+TV_ALL$species <- recode(TV_ALL$species, "St. D. Cas tet" = "std")
+TV_ALL$species <- recode(TV_ALL$species, "Dead" = "std")
+TV_ALL$species <- recode(TV_ALL$species, "vac vit dead" = "std")
+TV_ALL$species <- recode(TV_ALL$species, "st. D. Sal pul" = "std")
+TV_ALL$species <- recode(TV_ALL$species, "ST. D. Sal pul." = "std")
+TV_ALL$species <- recode(TV_ALL$species, "St. D. Sal Pul" = "std")
+TV_ALL$species <- recode(TV_ALL$species, "dead cas tet" = "std")
+```
+
+*recheck species unique values to make sure you got everything*
+```{r}
+unique(TV_ALL$species)
+
+#you can also use this code to export the species list to a csv so you can sort it alphabetically. This is good to do when you think you have the dataset mostly cleaned, because its easier to catch slight errors in naming conventions when you have less unique values to sort through#
+
+   #list.species <- unique(TV_ALL$species)
+  #write.csv(list.species, file = "species list.csv")
+```
+
+-- now check unique values for the other coumns to make sure there are no naming conventions there/the #of quads looks right --
+```{r}
+unique(TV_ALL$year)
+unique(TV_ALL$region)
+unique(TV_ALL$site)
+unique(TV_ALL$treatment)
+unique(TV_ALL$quad)
+
+```
+
+
+
+============== ASSIGNING FUNCTIONAL GROUPS ==============
+
+~vectors for assigning functional groups~ 
+```{r}
+
+bare <- c("Bare ground")
+dec_shrub <- c("Deciduous shrubs")
+ev_shrub <- c("Evergreen shrubs")
+grass <- c("Grass")
+sedge <- c("Sedge")
+lichen <- c("Lichen")
+litter <- c("Litter")
+moss <- c("Moss")
+Forb <- c("Forb")
+St.D <- c("Standing dead")
+
+```
+
+~ subset the data by species that belong to a given functional group~
+```{r}
+ 
+bg <- subset(TV_ALL, species== "bare" | species== "frost boil")  ## Bare ground
+
+ds <- subset(TV_ALL, species== "Bet nan" | species== "Vac uli" | species== "Sal pul" | species== "Arc alp" | species== "Sal phl" | species== "sal sp" | species== "Sal ret") #Deciduous shrubs 
+
+es <- subset(TV_ALL, species== "Emp nig" | species== "Led pal" | species== "Vac vit" | species== "Cas tet" | species== "And pol" | species== "Vac Oxy") #Evergreen shrubs
+
+gr <- subset(TV_ALL, species== "calcan" | species== "Car big") #Grass
+
+sed <- subset(TV_ALL, species== "Eri vag") #Sedge
+
+fb <- subset(TV_ALL, species== "Bis viv" | species== "flower" | species== "Ped lap" | species== "Ped sp" | species== "Pet fri" | species== "Pol bis" | species== "Pyr gra" | species== "Rub cha" | species== "Sax pun" | species== "Ste edw" | species== "Stel lon") #forbs
+
+lich <- subset(TV_ALL, species== "lichen") #lichen
+
+lit <- subset(TV_ALL, species== "litter" | species== "tussock litter") #litter
+
+ms <- subset(TV_ALL, species== "moss") #moss
+
+std <- subset(TV_ALL, species== "std" | species== "winterkill") #standing dead + winterkill
+
+```
+
+#creates a new column named "func.group" and fills it with the the name of the functional group for each of the subset groups of data created above
+```{r}
+
+bg["func.group"] <-bare
+ds["func.group"] <-dec_shrub
+es["func.group"] <-ev_shrub
+gr["func.group"] <-grass
+sed["func.group"] <-sedge
+fb["func.group"] <-Forb
+lich["func.group"] <-lichen
+lit["func.group"] <-litter
+ms["func.group"] <-moss
+std["func.group"] <-St.D
+
+```
+
+#merges the subset data back togeather, now with a new coumn called "func.group"
+  *IMPORTANT: MAKE SURE THE # OF OBSERVATIONS IN "TV_ALL_FUNCGRP" IS THE SAME AS "TV_ALL_FUNCGRP"*
+      ~if # of obs do not match, that means you are missing data, likely you forgot to assign a species       to one of the functional group subset code (look at the unique species names in each of the data        sets and see whats missing in "TV_ALL_FUNCGRP")
+```{r}
+
+MyMerge       <- function(x, y){
+  df            <- merge(x, y, all = TRUE)
+  rownames(df)  <- df$Row.names
+  df$Row.names  <- NULL
+  return(df)
+}
+TV_ALL_funcgrp           <- Reduce(MyMerge, list(bg, ds, es, gr, sed, fb, lich, lit, ms, std))
+
+#use this if you want to export these data to csv at this point
+write.csv(TV_ALL_funcgrp, file = "relcov_funcgrp_ALL.csv")
+
+```
+
+
+
+
+
+
+============== CALCULATING AVERAGES ==============
+
+*!!!!!! VERY IMPORTANT STEP !!!!!!!*
+#This step sums realative cover across species of a given functional group within each individual quadrat. If you do not do this then you will be averaging across all the species and quadrats within a functional group at the same time, instead of averaging the total relative cover of a functional group across the 8 quadrats. Basically you will deflating the average cover, so make sure you do this step!!! :)
+```{r}
+
+sum.func <- (TV_ALL_funcgrp) %>% group_by(year, site, treatment, quad, func.group) %>% summarise_at(vars(cover), list(cover.func = sum ), na.rm = TRUE)
+```
+
+
+Calculate average across quads within treatments
+*NOTE: this assumes you are averaging across 8 quads*
+    If there is a  year/treatment where we did not sample 8 quads, the you will need to subset that year/treatment and repeat the        steps below on that data set separately and adjust the vector formula to divide by the appropriate number of quads sampled         then merge the dataset back together 
+```{r}
+#Sum across quads in a plot
+avg.quad.func <- (sum.func) %>% group_by(year, site, treatment, func.group) %>% summarise_at(vars(cover.func), list(sum.quad = sum), na.rm = TRUE)
+
+#Vector for calculating average
+Q8.avg <- c(avg.quad.func$sum.quad/8)
+
+#creates and fills a new column with the average (by diving that sum by the number of reps specified)
+avg.quad.func["avg.quad"] <-Q8.avg
+```
+*NOTE: these is another way to have R automatically calculate the averages using Vars, but this was is more accurate and gives you more control* 
+
+Calculate average/SD across sites
+```{r}
+
+avg.func.site <- (avg.quad.func) %>% group_by(year, treatment, func.group) %>% summarise_at(vars(avg.quad), list(avg.site = mean, site.SD = sd), na.rm = TRUE)
+
+#export this file
+write.csv(avg.func.site, file = "avg_relcov_site.csv")
+
+```
+
+#Bargraph for averaged across sites
+```{r}
+
+#specify factor levels for herbivore treatment and functional groups. Helps to specify the order the species and herbivore treatment are stacked within the bar graph. If you want them to present in a different order, then change their order below and rerun the code
+
+avg.func.site$treatment <- factor(avg.func.site$treatment, levels = c("CT", "EX", "PU", "PR"))
+avg.func.site$func.group <- factor(avg.func.site$func.group, levels = c("Deciduous shrubs", 
+                                                                          "Evergreen shrubs", 
+                                                                          "Sedge",
+                                                                          "Grass",
+                                                                          "Forb",
+                                                                          "Lichen",
+                                                                          "Moss", 
+                                                                          "Litter",
+                                                                          "Standing dead",
+                                                                          "Bare ground"))
+
+#Creates stacked bar graph#
+ggplot(data = avg.func.site, aes(fill=func.group, x = treatment, y = avg.site)) +
+  geom_bar(position="fill", stat="identity")+ #Percent stacked
+  scale_fill_manual(" ", values = c("Deciduous shrubs" = "#004c6d",
+                                                           "Evergreen shrubs" = "#6996b3",
+                                                           "Sedge" = "#036d3f",
+                                                           "Grass"="#6fa17e",
+                                                           "Forb"="#c4d6c8",
+                                                           "Lichen"="#f6e8c3",
+                                                           "Moss"="#dfc27d",
+                                                           "Litter"="#bf812d",
+                                                           "Standing dead"="#8c510a",
+                                                           "Bare ground" = "#543005"))+
+  theme_light()+
+  #theme(aspect.ratio = 9/18.5)+ #use for vertical stack only
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  theme(axis.text.x = element_text(color = "black", size = 8, angle = 45, hjust = 1))+
+  theme(axis.text.y = element_text(color = "black", size = 6))+
+  theme( axis.line = element_line(colour = "black", 
+                      size = 1, linetype = "solid"))+
+  scale_y_continuous(breaks= c(0, 0.50, 1))+
+  theme(plot.title = element_text(hjust = .5))+
+  labs(y = "Mean relative cover", x = " ")+ 
+  #theme(axis.title.y = element_text(face = "bold"))+
+    #theme(axis.title.x = element_text(face = "bold"))+
+  #theme(legend.direction="horizontal")+
+  #theme(legend.position="bottom")+
+  facet_grid(. ~ year) #vertically stacked
+
+ggsave("toolik_cover_treatment_avrg.jpeg") #exports a jpeg image of the graph
+```
+
+```{r}
+
+avg.quad.func$treatment <- factor(avg.quad.func$treatment, levels = c("CT", "EX", "PU", "PR"))
+avg.quad.func$func.group <- factor(avg.quad.func$func.group, levels = c("Deciduous shrubs", 
+                                                                          "Evergreen shrubs", 
+                                                                          "Sedge",
+                                                                          "Grass",
+                                                                          "Forb",
+                                                                          "Lichen",
+                                                                          "Moss", 
+                                                                          "Litter",
+                                                                          "Standing dead",
+                                                                          "Bare ground"))
+
+#Creates stacked bar graph#
+ggplot(data = avg.quad.func, aes(fill=func.group, x = treatment, y = avg.quad)) +
+  geom_bar(position="fill", stat="identity")+ #Percent stacked
+  scale_fill_manual(" ", values = c("Deciduous shrubs" = "#004c6d",
+                                                           "Evergreen shrubs" = "#6996b3",
+                                                           "Sedge" = "#036d3f",
+                                                           "Grass"="#6fa17e",
+                                                           "Forb"="#c4d6c8",
+                                                           "Lichen"="#f6e8c3",
+                                                           "Moss"="#dfc27d",
+                                                           "Litter"="#bf812d",
+                                                           "Standing dead"="#8c510a",
+                                                           "Bare ground" = "#543005"))+
+  theme_light()+
+  #theme(aspect.ratio = 9/18.5)+ #use for vertical stack only
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  theme(axis.text.x = element_text(color = "black", size = 12, angle = 45, hjust = 1))+
+  theme(axis.text.y = element_text(color = "black", size = 10))+
+  theme( axis.line = element_line(colour = "black", 
+                      size = 1, linetype = "solid"))+
+  scale_y_continuous(breaks= c(0, 0.50, 1))+
+  theme(plot.title = element_text(hjust = .5))+
+  labs(y = "Mean relative cover", x = " ")+ 
+  #theme(axis.title.y = element_text(face = "bold"))+
+    #theme(axis.title.x = element_text(face = "bold"))+
+  #theme(legend.direction="horizontal")+
+  #theme(legend.position="bottom")+
+  facet_grid(site ~ year) #vertically stacked
+
+ggsave("toolik_cover_treatment_site_avrg.jpeg") #exports a jpeg image of the graph
+
+
+```
+
+
