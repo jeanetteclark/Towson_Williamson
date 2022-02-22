@@ -21,7 +21,6 @@ Check working directory, set new working directory if needed.
 
 ```{r}
 getwd()
-#setwd("C:/Users/willi/OneDrive/Documents/Towson University/Data/Cover data/LTER/6MAT_cover_thesis")
 ```
 
 Install packages and load the package libraries. **Once you have installed a package, you only need to load the library for future use.**
@@ -40,9 +39,9 @@ load in each years .csv files containing the data
 ```{r}
 #TH_2018 <- read.csv(file.choose(), header = TRUE)
 
-relcov_08_20 <- read.csv("C:/Users/willi/OneDrive/Documents/Towson University/Data/Cover data/LTER/06MAT_cover_thesis/relcov_2008_2020.csv", header = TRUE)
+relcov_08_20 <- read.csv("../Data/LTER_06MAT_relcov_2008_2020.csv.csv", header = TRUE)
 
-relcov_21 <- read.csv("C:/Users/willi/OneDrive/Documents/Towson University/Data/Cover data/LTER/06MAT_cover_thesis/relcov_2021.csv", header = TRUE)
+relcov_21 <- read.csv("../Data/LTER_06MAT_relcov_2021.csv", header = TRUE)
 
 ```
 
@@ -68,7 +67,7 @@ MyMerge       <- function(x, y){
 relcov_08_21           <- Reduce(MyMerge, list(relcov_21, relcov_08_20))
 
 
-write.csv(relcov_08_21, file = "relcov_08_21.csv")
+write.csv(relcov_08_21, file = "../Derived CSVs/LTER_06MAT_relcov_all.csv")
 ```
 
 *make sure the \# of Obs in the 1st data set + the 2nd match the \# of obs in the merged data set*
@@ -282,9 +281,10 @@ relcov.func_08_21           <- Reduce(MyMerge, list(bg1, bg2, ds1, ds2, ds3, ds4
 
 #export this file
 
-write.csv(relcov.func_08_21, file = "relcov_func_all.csv")
+write.csv(relcov.func_08_21, file = "../Derived CSVs/LTER_06MAT_relcov_func_all.csv")
 
 ```
+
 
 ## Statistics & graphing
 
@@ -337,7 +337,7 @@ MyMerge       <- function(x, y){
 Avg.func.quad           <- Reduce(MyMerge, list(Q4_sum_avg_quad, Q5_sum_avg_quad, Q8_sum_avg_quad))
 
 #export this file
-write.csv(Avg.func.quad, file = "avg_relcov_quad.csv")
+write.csv(Avg.func.quad, file = "../Derived CSVs/LTER_06MAT_avg_relcov_quad.csv")
 ```
 
 Calculate stats across blocks
@@ -347,7 +347,7 @@ Calculate stats across blocks
 Avg.func.block <- (Avg.func.quad) %>% group_by(year, plot, func.group) %>% summarise_at(vars(avg.1), list(avg.2 = mean, block.sd = sd), na.rm = TRUE)
 
 #export this file
-write.csv(Avg.func.block, file = "avg_relcov_block.csv")
+write.csv(Avg.func.block, file = "../Derived CSVs/LTER_06MAT_avg_relcov_block.csv")
 
 ```
 
@@ -403,7 +403,7 @@ ggplot(data = Avg.func.block, aes(fill=func.group, x = year, y = avg.2)) +
   #theme(legend.position="bottom")+
   facet_grid(plot ~ .) #vertically stacked
 
-ggsave("stacked_bar_cover.jpeg")
+ggsave("../Figures/LTER_06MAT_stacked_bar_cover.jpeg")
 ```
 
 ##STATISTICS
@@ -481,7 +481,7 @@ TukeyHSD(ANOVA_21, which = "func.group")
   #change year to be a character string 
   wide.Avg.func.quad$year <- as.character(wide.Avg.func.quad$year)
   
-  write.csv(wide.Avg.func.quad, file = "WIDE_avg.func.quad.csv")
+  write.csv(wide.Avg.func.quad, file = "../Derived CSVs/LTER_06MAT_WIDE_avg_quad.csv")
 ```
 
 Now make the graphs...
@@ -520,7 +520,7 @@ panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
   #stat_cor(method = "pearson", label.x = .5, label.y = .25)+ #adds p-value 
   facet_grid(plot ~ .)
 
-ggsave("correlation_decshrubs_Evag.jpeg")
+ggsave("../Figures/LTER_06MAT_correlation_decshrubs_Evag.jpeg")
 
 ```
 
@@ -621,10 +621,10 @@ PCORD_WIDE_func[is.na(PCORD_WIDE_func)] <- 0
 
 ```{r}
 #write.csv(PCORD_WIDE_func, file = "func_cover_PCORD_friendly.csv")
-write.csv(PCORD_WIDE_func, file = "func_cover_QUAD_PCORD_friendly.csv")
+write.csv(PCORD_WIDE_func, file = "../Derived CSVs/LTER_06MAT_relcov_QUAD_PCORD_friendly.csv")
 
 #write.csv(PCORD_yr_plot, file = "yr_plot_PCORD_friendly.csv")
-write.csv(PCORD_yr_plot, file = "yr_plot_QUAD_PCORD_friendly.csv")
+write.csv(PCORD_yr_plot, file = "../Derived CSVs/LTER_06MAT_yr_plot_QUAD_PCORD_friendly.csv")
 
 ```
 
@@ -635,8 +635,8 @@ Isolate 2008 and 2021 data from data set not averaged across blocks
 PCORD_yr_plot_2008 <- subset(PCORD_yr_plot, year== 2008) 
 PCORD_yr_plot_2021 <- subset(PCORD_yr_plot, year== 2021)
 
-write.csv(PCORD_yr_plot_2008, file = "yr_plot_QUAD_PCORD_friendly_2008.csv")
-write.csv(PCORD_yr_plot_2021, file = "yr_plot_QUAD_PCORD_friendly_2021.csv")
+write.csv(PCORD_yr_plot_2008, file = "../Derived CSVs/LTER_O6MAT_yr_plot_QUAD_PCORD_friendly_2008.csv")
+write.csv(PCORD_yr_plot_2021, file = "../Derived CSVs/LTER_06MAT_yr_plot_QUAD_PCORD_friendly_2021.csv")
 
 #--------
 Avg.func.quad_2008 <- subset(Avg.func.quad, year== 2008) 
@@ -658,10 +658,10 @@ PCORD_WIDE_func_2021[is.na(PCORD_WIDE_func_2021)] <- 0
 
 #----------
 
-write.csv(PCORD_WIDE_func_2008, file = "func_cover_QUAD_PCORD_friendly_2008.csv")
-write.csv(PCORD_WIDE_func_2021, file = "func_cover_QUAD_PCORD_friendly_2021.csv")
+write.csv(PCORD_WIDE_func_2008, file = "../Derived CSVs/LTER_06MAT_func_cover_QUAD_PCORD_friendly_2008.csv")
+write.csv(PCORD_WIDE_func_2021, file = "../Derived CSVs/LTER_06MAT_func_cover_QUAD_PCORD_friendly_2021.csv")
 
-write.csv(PCORD_yr_plot_2008, file = "yr_plot_QUAD_PCORD_friendly_2008.csv")
-write.csv(PCORD_yr_plot_2021, file = "yr_plot_QUAD_PCORD_friendly_2021.csv")
+write.csv(PCORD_yr_plot_2008, file = "../Derived CSVs/LTER_06MAT_yr_plot_QUAD_PCORD_friendly_2008.csv")
+write.csv(PCORD_yr_plot_2021, file = "../Derived CSVs/LTER_06MAT_yr_plot_QUAD_PCORD_friendly_2021.csv")
 
 ```
