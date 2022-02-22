@@ -26,20 +26,19 @@ getwd()
 Install packages and load the package libraries. **Once you have installed a package, you only need to load the library for future use.**
 
 ```{r}
-#library(tidyverse)
 library("tidyr")
 library("dplyr")
+library("readr")
 library("ggplot2")
-library("agricolae")
 library("ggpubr")
-library("nlme")
+#library("nlme")
 ```
 
 load in each years .csv files containing the data
 ```{r}
 #TH_2018 <- read.csv(file.choose(), header = TRUE)
 
-relcov_08_20 <- read.csv("../Data/LTER_06MAT_relcov_2008_2020.csv.csv", header = TRUE)
+relcov_08_20 <- read.csv("../Data/LTER_06MAT_relcov_2008_2020.csv", header = TRUE)
 
 relcov_21 <- read.csv("../Data/LTER_06MAT_relcov_2021.csv", header = TRUE)
 
@@ -83,7 +82,6 @@ unique(relcov_08_21$species)
 -- if there are mistakes then rename them using the code below and recheck unique values again to make sure the recode worked and you didn't loose any observations --
 
 ```{r}
-
 #naming convention errors 
 relcov_08_21$species <- recode(relcov_08_21$species, "bare " = "bare")
 relcov_08_21$species <- recode(relcov_08_21$species, "Litter" = "litter")
@@ -94,31 +92,29 @@ relcov_08_21$species <- recode(relcov_08_21$species, "Fr boil" = "frost boil")
 relcov_08_21$species <- recode(relcov_08_21$species, "St. D. Sal pul" = "St. D. Sal")
 relcov_08_21$species <- recode(relcov_08_21$species, "Ev litter" = "Eri vag litter")
 
-#simplify groups 
-
-  #group all standing dead evergreens together
-relcov_08_21$species <- recode(relcov_08_21$species, "St. D. Led Pal" = "St. D. Evrg")
-relcov_08_21$species <- recode(relcov_08_21$species, "Dead Evrg" = "St. D. Evrg")
-relcov_08_21$species <- recode(relcov_08_21$species, "Dead Bet" = "St. D. Evrg")
-relcov_08_21$species <- recode(relcov_08_21$species, "St. D. Bet" = "St. D. Evrg")
-
-  #group all grasses together 
-relcov_08_21$species <- recode(relcov_08_21$species, "Cal can" = "grass")
-relcov_08_21$species <- recode(relcov_08_21$species, "Grass ex." = "grass")
-relcov_08_21$species <- recode(relcov_08_21$species, "Car big" = "grass")
-relcov_08_21$species <- recode(relcov_08_21$species, "Arc lat" = "grass")
-relcov_08_21$species <- recode(relcov_08_21$species, "Cal lap" = "grass")
-relcov_08_21$species <- recode(relcov_08_21$species, "Fes sp." = "grass")
-
-  #group all St. D together 
+#simplify things identified to species level  that shouldn't be 
+  #St.D.
+relcov_08_21$species <- recode(relcov_08_21$species, "St. D. Led Pal" = "St. D")
+relcov_08_21$species <- recode(relcov_08_21$species, "Dead Evrg" = "St. D")
+relcov_08_21$species <- recode(relcov_08_21$species, "Dead Bet" = "St. D")
+relcov_08_21$species <- recode(relcov_08_21$species, "St. D. Bet" = "St. D")
 relcov_08_21$species <- recode(relcov_08_21$species, "St. D. Sal" = "St. D")
 relcov_08_21$species <- recode(relcov_08_21$species, "St. D. Bet." = "St. D")
 relcov_08_21$species <- recode(relcov_08_21$species, "St. D. Evrg" = "St. D")  
-
-  #group all litter together 
+  #litter
 relcov_08_21$species <- recode(relcov_08_21$species, "Eri vag litter" = "litter")
-
 ```
+
+Get overall average cover by species for the CT plots 
+```{r}
+species.avg.ct <- (relcov_08_21) %>%
+  filter(plot== "CT")%>%
+  group_by(species)%>% 
+  summarise(spec.avg = mean(rel.cov, na.rm = TRUE), n = n(), sd = sd(rel.cov, na.rm = TRUE))
+
+write.csv(species.avg.ct, file = "../Derived CSVs/LTER_06MAT_species_avg_allyrs.csv")
+```
+
 
 -- Remove any data that you will not need for the analysis --
 
@@ -132,140 +128,52 @@ relcov_08_21 <- relcov_08_21[!relcov_08_21$block == "4", ]
 
 ```{r}
 
-bare <- c("Bare ground")
-dec_shrub <- c("Deciduous shrubs")
-ev_shrub <- c("Evergreen shrubs")
-gram <- c("Graminoid")
-eri_vag <- c("Eri vag")
-lich <- c("Lichen")
-lit <- c("Litter")
-moss <- c("Moss")
-Forb <- c("Forb")
-St.D <- c("Standing dead")
+BARE <- c("Bare ground")
+DEC <- c("Deciduous shrubs")
+EVRG <- c("Evergreen shrubs")
+GRASS <- c("Grass")
+SED <- c("Sedge")
+LICH <- c("Lichen")
+LIT <- c("Litter")
+MOSS <- c("Moss")
+FORB <- c("Forb")
+STD <- c("Standing dead")
 
 ```
+
 
 \~subset the dataset by species then reassigned with functional groups
 
 ```{r}
+bare <- subset(relcov_08_21, species== "bare" |species== "frost boil")
+  bare["func.group"] <- BARE
 
-  ## Bare ground ##
-bg1 <- subset(relcov_08_21, species== "bare") 
-bg2 <- subset(relcov_08_21, species== "frost boil")
+dec <- subset(relcov_08_21, species== "Bet nan"|species== "Vac uli"|species== "Sal pul"|species== "Arc alp"|"Sal phl"|species== "Sal arc"|species== "Sal ret")
+  dec["func.group"] <-DEC
 
-  bg1["func.group"] <-bare
-  bg2["func.group"] <-bare
+evrg <- subset(relcov_08_21, species== "Emp nig"|species== "Led pal"|species=="Vac vit"|species== "Cas tet"|species== "And pol"|species== "Dry int")
+  evrg["func.group"] <-EVRG
 
+grass <- subset(relcov_08_21, species== "Cal can" | species== "Grass ex." | species== "Car big" | species== "Arc lat" | species== "Cal lap" | species== "Fes sp.")
+ grass["func.group"] <-GRASS
+
+sed <- subset(relcov_08_21, species== "Eri vag")
+  sed["func.group"] <-SED
+
+forb <- subset(relcov_08_21, species== "Ped lap"|species== "Pol bis"|species== "Rub cha"|species== "Luz sp."|species== "Pet sp."|species== "Hie alp"|species== "Ped sp."|species== "Arnica sp."|species== "Ste edw"|species== "Pet fri"|species== "Ste lon"|species== "Sau ang"|species== "Hie sp."|species== "Min sp."|species== "Tof sp."|species== "Ste sp."|species== "dicot"|species== "Lag gla"|species== "Sax pun"|species== "Pyr sec"|species== "Equ arv"|species== "Pol viv"|species== "Tof coc"|species== "Pyr sp.")
+  forb["func.group"] <-FORB
+
+lich <- subset(relcov_08_21, species== "lichen")
+  lich["func.group"] <-LICH  
+
+lit <- subset(relcov_08_21, species== "litter")
+  lit["func.group"] <-LIT
   
-  ## Deciduous shrubs ##
-ds1 <- subset(relcov_08_21, species== "Bet nan")
-ds2 <- subset(relcov_08_21, species== "Vac uli")
-ds3 <- subset(relcov_08_21, species== "Sal pul")
-ds4 <- subset(relcov_08_21, species== "Arc alp")
-ds5 <- subset(relcov_08_21, species== "Sal phl")
-ds6 <- subset(relcov_08_21, species== "Sal arc")
-ds7 <- subset(relcov_08_21, species== "Sal ret")
-
- ds1["func.group"] <-dec_shrub
- ds2["func.group"] <-dec_shrub
- ds3["func.group"] <-dec_shrub
- ds4["func.group"] <-dec_shrub
- ds5["func.group"] <-dec_shrub
- ds6["func.group"] <-dec_shrub
- ds7["func.group"] <-dec_shrub
- 
-
- ## Evergreen shrubs ##
-es1 <- subset(relcov_08_21, species== "Emp nig")
-es2 <- subset(relcov_08_21, species== "Led pal")
-es3 <- subset(relcov_08_21, species== "Vac vit")
-es4 <- subset(relcov_08_21, species== "Cas tet")
-es5 <- subset(relcov_08_21, species== "And pol")
-es6 <- subset(relcov_08_21, species== "Dry int")
-
-  es1["func.group"] <-ev_shrub
-  es2["func.group"] <-ev_shrub
-  es3["func.group"] <-ev_shrub
-  es4["func.group"] <-ev_shrub
-  es5["func.group"] <-ev_shrub
-  #es6["func.group"] <-ev_shrub
-    
-
- ## Graminoid ##
-gram1 <- subset(relcov_08_21, species== "Eri vag")
-gram2 <- subset(relcov_08_21, species== "grass")
-gram3 <- subset(relcov_08_21, species== "graminoid")
-
-  gram1["func.group"] <-eri_vag
-  gram2["func.group"] <-gram
-  gram3["func.group"] <-gram
-
-
-  ## Forb ##
-forb1 <- subset(relcov_08_21, species== "Ped lap")
-forb2 <- subset(relcov_08_21, species== "Pol bis")
-forb3 <- subset(relcov_08_21, species== "Rub cha")
-forb4 <- subset(relcov_08_21, species== "Luz sp.")
-forb5 <- subset(relcov_08_21, species== "Pet sp.")
-forb6 <- subset(relcov_08_21, species== "Hie alp")
-forb7 <- subset(relcov_08_21, species== "Ped sp.")
-forb8 <- subset(relcov_08_21, species== "Arnica sp.")
-forb9 <- subset(relcov_08_21, species== "Ste edw")
-forb10 <- subset(relcov_08_21, species== "Pet fri")
-forb11 <- subset(relcov_08_21, species== "Ste lon")
-forb12 <- subset(relcov_08_21, species== "Sau ang")
-forb13 <- subset(relcov_08_21, species== "Hie sp.")
-forb14 <- subset(relcov_08_21, species== "Min sp.")
-forb15 <- subset(relcov_08_21, species== "Tof sp.")
-forb16 <- subset(relcov_08_21, species== "Ste sp.")
-forb17 <- subset(relcov_08_21, species== "dicot")
-forb18 <- subset(relcov_08_21, species== "Lag gla")
-forb19 <- subset(relcov_08_21, species== "Sax pun")
-forb20 <- subset(relcov_08_21, species== "Pyr sec")
-forb21 <- subset(relcov_08_21, species== "Equ arv")
-forb22 <- subset(relcov_08_21, species== "Pol viv")
-forb23 <- subset(relcov_08_21, species== "Tof coc")
-forb24 <- subset(relcov_08_21, species== "Pyr sp.")
+moss <- subset(relcov_08_21, species== "moss")
+  moss["func.group"] <-MOSS
   
-  forb1["func.group"] <-Forb
-  forb2["func.group"] <-Forb
-  forb3["func.group"] <-Forb
-  forb4["func.group"] <-Forb
-  forb5["func.group"] <-Forb
-  forb6["func.group"] <-Forb
-  forb7["func.group"] <-Forb
-  forb8["func.group"] <-Forb
-  forb9["func.group"] <-Forb
-  forb10["func.group"] <-Forb
-  forb11["func.group"] <-Forb
-  forb12["func.group"] <-Forb
-  forb13["func.group"] <-Forb
-  forb14["func.group"] <-Forb
-  forb15["func.group"] <-Forb
-  forb16["func.group"] <-Forb
-  forb17["func.group"] <-Forb
-  #forb18["func.group"] <-Forb
-  #forb19["func.group"] <-Forb
-  #forb20["func.group"] <-Forb
-  #forb21["func.group"] <-Forb
-  #forb22["func.group"] <-Forb
-  #forb23["func.group"] <-Forb
-  #forb24["func.group"] <-Forb
-  
-
-  ## other groups ##
-lichen <- subset(relcov_08_21, species== "lichen")
-  lichen["func.group"] <-lich  
-
-litter <- subset(relcov_08_21, species== "litter")
-  litter["func.group"] <-lit
-  
-ms <- subset(relcov_08_21, species== "moss")
-  ms["func.group"] <-moss
-  
-standing.d <- subset(relcov_08_21, species== "St. D")
-  standing.d["func.group"] <-St.D
-
+std <- subset(relcov_08_21, species== "St. D")
+  std["func.group"] <-STD
 ```
 
 ```{r}
