@@ -1,7 +1,5 @@
 ---
 title: "Nicole's Master Thesis - Towson Univerity"
-author: "Nicole"
-date: "2/21/2022"
 output: html_document
 ---
 
@@ -9,5 +7,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-#test link 
-[LTER_COVER](Rmd/LTER_06MAT_cover_thesis.Rmd)
+
+<img src="Images/TheBoys_HerbivoryTransect.jpg" class="center">
+
+### Links to Rmd files:  
+
+- [Simulated Herbivory](Rmd/Simulated_Herbivory.Rmd)  
+- [LTER_COVER](Rmd/LTER_06MAT_cover_thesis.Rmd)  
+- [Team Vole Cover](Rmd/Team_Vole_cover.Rmd)  
+
+******  
