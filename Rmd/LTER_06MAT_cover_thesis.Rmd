@@ -9,22 +9,35 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## PREPPING DATA
+### Helpful tips
 
-Clear workspace (if desired/needed)
+**Useful keyboard shortcuts**
+*these work for windows, they may be different for Macs*
 
-```{r}
+- `Cntrl` + `Z` functions like the Undo button in word or excel. Undoes whatever action you just did
+- `Cntrl` + `Alt` + `I` inserts a new code chunk
+- `Cntrl` + `Enter` runs the code that your courser is on (good for if you want to run small sections of code within a larger code chunk)
+- `Cntrl` + `Shift` + `M` inserts the pipe functions ` %>% `
+- `Cntrl` + `F` allows you to find things within the document (can be useful if you want to replace the name of an object everywhere in the document at the same time)
+- `Cntrl` + `Shift` + `O` opens a document outline that you can use to quickly navigate between titled sections of your document 
+- `Cntrl` + `C` to copy, `Cntrl` + `V` to paste
+- `Cntrl` + `S` to save
+
+Use `rm(list = ls())` to Clear workspace (if desired/needed). If run correctly will clear everything from your environment tab. Typically it's good to do this at the start of each of your sessions. Defiantly should do it if you open a new Rmd file.
+```{r, echo = FALSE}
 rm(list = ls())
 ```
 
-Check working directory, set new working directory if needed.
-
-```{r}
+Use this`getwd()` to check working directory. Will most likely be whatever folder your Rmd file is in. If you need to change it for some reason use `setwd()` 
+```{r, echo = FALSE}
 getwd()
+#setwd()
 ```
 
-Install packages and load the package libraries. **Once you have installed a package, you only need to load the library for future use.**
+### Downloading/loading packages
 
+Use `install.packages` to download and install a new R package. You only need to do this once, then you can just use `library()` to load it and be able to call functions within it. and load the package libraries. *TIP: It's generally considered best practice to keep the commands to call all the packages you need to use at the top of the document*  
+  `tidyr` `dplyr` and `readr` are probably the mosy commonly used packages for data wrangling/cleaning.`ggplot2` is very common for creating publication quality figures.
 ```{r}
 library("tidyr")
 library("dplyr")
@@ -33,6 +46,8 @@ library("ggplot2")
 library("ggpubr")
 #library("nlme")
 ```
+
+## Data Wrangling
 
 load in each years .csv files containing the data
 ```{r}
@@ -44,7 +59,7 @@ relcov_21 <- read.csv("../Data/LTER_06MAT_relcov_2021.csv", header = TRUE)
 
 ```
 
-#look at the data to see what it contains -- *make sure the column names in each data set match so they can be merged together*
+\#look at the data to see what it contains -- *make sure the column names in each data set match so they can be merged together*
 
 ```{r}
 head(relcov_21) #opens first 6 rows
@@ -53,7 +68,7 @@ summary(relcov_21)
 str(relcov_21) #tells us what data types (numbers, factors, etc) are in the data frame
 ```
 
-#Then merge the years together... **all the names of columns need to be exactly the same name (capitalization and spaces included)
+\#Then merge the years together... \*\*all the names of columns need to be exactly the same name (capitalization and spaces included)
 
 ```{r}
 
@@ -69,59 +84,46 @@ relcov_08_21           <- Reduce(MyMerge, list(relcov_21, relcov_08_20))
 write.csv(relcov_08_21, file = "../Derived CSVs/LTER_06MAT_relcov_all.csv")
 ```
 
-*make sure the \# of Obs in the 1st data set + the 2nd match the \# of obs in the merged data set*
+**make sure the \# of Obs in the 1st data set + the 2nd match the \# of obs in the merged data set**
+
+*Remove any data that you will not need for the analysis*\
+In this case we can remove all the data from block 4
+
+```{r}
+relcov_08_21 <- relcov_08_21 %>% filter(-block==4)
+```
 
 -- Check unique vales in each column to make sure that there are not naming errors --
 
 ```{r}
-
 unique(relcov_08_21$species)
-
 ```
 
 -- if there are mistakes then rename them using the code below and recheck unique values again to make sure the recode worked and you didn't loose any observations --
 
 ```{r}
-#naming convention errors 
-relcov_08_21$species <- recode(relcov_08_21$species, "bare " = "bare")
-relcov_08_21$species <- recode(relcov_08_21$species, "Litter" = "litter")
-relcov_08_21$species <- recode(relcov_08_21$species, "Moss" = "moss")
-relcov_08_21$species <- recode(relcov_08_21$species, "Lichen " = "lichen")
-relcov_08_21$species <- recode(relcov_08_21$species, "Lichen" = "lichen")
-relcov_08_21$species <- recode(relcov_08_21$species, "Fr boil" = "frost boil")
-relcov_08_21$species <- recode(relcov_08_21$species, "St. D. Sal pul" = "St. D. Sal")
-relcov_08_21$species <- recode(relcov_08_21$species, "Ev litter" = "Eri vag litter")
+
+#fix naming convention errors 
+relcov_08_21$species <- relcov_08_21$species %>% 
+  recode("bare " = "bare", "Litter" = "litter", "Moss" = "moss", "Lichen " = "lichen","Lichen" = "lichen", "Fr boil" = "frost boil", "St. D. Sal pul" = "St. D. Sal", "Ev litter" = "Eri vag litter", "Grass ex." = "grass")
 
 #simplify things identified to species level  that shouldn't be 
   #St.D.
-relcov_08_21$species <- recode(relcov_08_21$species, "St. D. Led Pal" = "St. D")
-relcov_08_21$species <- recode(relcov_08_21$species, "Dead Evrg" = "St. D")
-relcov_08_21$species <- recode(relcov_08_21$species, "Dead Bet" = "St. D")
-relcov_08_21$species <- recode(relcov_08_21$species, "St. D. Bet" = "St. D")
-relcov_08_21$species <- recode(relcov_08_21$species, "St. D. Sal" = "St. D")
-relcov_08_21$species <- recode(relcov_08_21$species, "St. D. Bet." = "St. D")
-relcov_08_21$species <- recode(relcov_08_21$species, "St. D. Evrg" = "St. D")  
+relcov_08_21$species <- relcov_08_21$species %>% 
+recode("St. D. Led Pal" = "St. D", "Dead Evrg" = "St. D", "Dead Bet" = "St. D", "St. D. Bet" = "St. D", "St. D. Sal" = "St. D", "St. D. Bet." = "St. D", "St. D. Evrg" = "St. D")
   #litter
 relcov_08_21$species <- recode(relcov_08_21$species, "Eri vag litter" = "litter")
 ```
 
-Get overall average cover by species for the CT plots 
+Get overall average cover by species for the CT plots
+
 ```{r}
 species.avg.ct <- (relcov_08_21) %>%
   filter(plot== "CT")%>%
-  group_by(species)%>% 
+  group_by(species, plot)%>% 
   summarise(spec.avg = mean(rel.cov, na.rm = TRUE), n = n(), sd = sd(rel.cov, na.rm = TRUE))
 
 write.csv(species.avg.ct, file = "../Derived CSVs/LTER_06MAT_species_avg_allyrs.csv")
-```
-
-
--- Remove any data that you will not need for the analysis --
-
-```{r}
-
-relcov_08_21 <- relcov_08_21[!relcov_08_21$block == "4", ] 
-
 ```
 
 \~vectors for assigning functional groups\~
@@ -141,7 +143,6 @@ STD <- c("Standing dead")
 
 ```
 
-
 \~subset the dataset by species then reassigned with functional groups
 
 ```{r}
@@ -154,7 +155,7 @@ dec <- subset(relcov_08_21, species== "Bet nan"|species== "Vac uli"|species== "S
 evrg <- subset(relcov_08_21, species== "Emp nig"|species== "Led pal"|species=="Vac vit"|species== "Cas tet"|species== "And pol"|species== "Dry int")
   evrg["func.group"] <-EVRG
 
-grass <- subset(relcov_08_21, species== "Cal can" | species== "Grass ex." | species== "Car big" | species== "Arc lat" | species== "Cal lap" | species== "Fes sp.")
+grass <- subset(relcov_08_21, species== "Cal can" | species== "grass" | species== "Car big" | species== "Arc lat" | species== "Cal lap" | species== "Fes sp."| species== "graminoid")
  grass["func.group"] <-GRASS
 
 sed <- subset(relcov_08_21, species== "Eri vag")
@@ -192,7 +193,6 @@ relcov.func_08_21           <- Reduce(MyMerge, list(bg1, bg2, ds1, ds2, ds3, ds4
 write.csv(relcov.func_08_21, file = "../Derived CSVs/LTER_06MAT_relcov_func_all.csv")
 
 ```
-
 
 ## Statistics & graphing
 
@@ -314,9 +314,9 @@ ggplot(data = Avg.func.block, aes(fill=func.group, x = year, y = avg.2)) +
 ggsave("../Figures/LTER_06MAT_stacked_bar_cover.jpeg")
 ```
 
-##STATISTICS
+\#\#STATISTICS
 
- test for significant differences in rel cover of each species in 2021
+test for significant differences in rel cover of each species in 2021
 
 used this site (<https://www.scribbr.com/statistics/anova-in-r/>)
 
@@ -335,6 +335,7 @@ unique(quad.avg.2021.live$func.group)
 ```
 
 # ANOVA
+
 ```{r}
 
 ANOVA_21<- aov(avg.1 ~ plot + func.group + plot:func.group, data = quad.avg.2021.live)
@@ -435,8 +436,6 @@ ggsave("../Figures/LTER_06MAT_correlation_decshrubs_Evag.jpeg")
 ```{r}
 test1 <- subset(wide.Avg.func.quad, plot == "CT")
 ```
-
-
 
 ```{r}
 ###Bet nan VS Eri Vag (not separated by fert treatment )
