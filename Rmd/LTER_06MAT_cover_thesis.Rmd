@@ -101,7 +101,6 @@ relcov_08_21 <- relcov_08_21 %>%
   rename(rel_cov = rel.cov)
 ```
 
-
 Check unique vales in each column to make sure that there are not naming errors
 ```{r}
 unique(relcov_08_21$species)
@@ -120,6 +119,13 @@ relcov_08_21$species <- relcov_08_21$species %>%
 recode("St. D. Led Pal" = "St. D", "Dead Evrg" = "St. D", "Dead Bet" = "St. D", "St. D. Bet" = "St. D", "St. D. Sal" = "St. D", "St. D. Bet." = "St. D", "St. D. Evrg" = "St. D")
   #litter
 relcov_08_21$species <- recode(relcov_08_21$species, "Eri vag litter" = "litter")
+```
+
+Sum functional cover across species within quadrats. This likely wont change the relative cover for most species unless they were listed more than once in a quadrat but it's good to do to insure accuracy after fixing naming conventions.
+
+- It will defiantly change values for things like St.D, which was originally identified to species level and is now just St. D
+```{r}
+relcov_08_21 <- (relcov_08_21) %>% group_by(year, block, plot, quad, species) %>% summarise_at(vars(rel_cov), list(rel_cov = sum ), na.rm = TRUE)
 ```
 
 **Get overall average cover by species for the CT plots (used for table describing what species were assigned to each functional group)**
@@ -186,7 +192,7 @@ ms["func_grp"] <-moss
 std["func_grp"] <-St.D
 ```
 
-Then merge these groups back together into one dataset. *Make sure the number of observations in `relcov_func_08_21` matches `relcov_08_21`, but `relcov_func_08_21` should have one more variable (the new func_grp coulmn you created),
+Then merge these groups back together into one dataset. *Make sure the number of observations in `relcov_func_08_21` matches `relcov_08_21`, but `relcov_func_08_21` should have one more variable (the new func_grp column you created),
 ```{r}
 
 MyMerge       <- function(x, y){
@@ -210,12 +216,12 @@ write.csv(relcov_func_08_21, file = "../Derived CSVs/LTER_06MAT_relcov_funcgrp_a
 
 1. This step sums relative cover across species of a given functional group within each individual quadrat. If you do not do this then you will be averaging across all the species and quadrats within a functional group at the same time, instead of averaging the total relative cover of a functional group across the 8 quadrats. Basically you will deflating the average cover, so make sure you do this step!!! :)
 ```{r}
-sum.func <- (relcov_func_08_21) %>% group_by(year, block, plot, quad, func_grp) %>% summarise_at(vars(rel_cov), list(relcov_func = sum ), na.rm = TRUE)
+sum_func <- (relcov_func_08_21) %>% group_by(year, block, plot, quad, func_grp) %>% summarise_at(vars(rel_cov), list(relcov_func = sum ), na.rm = TRUE)
 ```
 
 **Get overall average cover by functional group for the CT plots (used for table describing what species were assigned to each functional group)**
 ```{r}
-func_grp_avg_ct <- (sum.func) %>%
+func_grp_avg_ct <- (sum_func) %>%
   filter(plot== "CT")%>%
   group_by(func_grp, plot)%>% #You don't need to list plot here, I just did it as a logic check 
   summarise(func_avg = mean(relcov_func, na.rm = TRUE), n = n(), sd = sd(relcov_func, na.rm = TRUE))
@@ -223,71 +229,76 @@ func_grp_avg_ct <- (sum.func) %>%
 write.csv(func_grp_avg_ct, file = "../Derived CSVs/LTER_06MAT_funcgrp_avg_allyrs.csv")
 ```
 
+2. Subset by year based on # of quads measured per plot in a given year 
 
-Subset into different years based on # of quads measured per plot
+- In 2008 we measured 4 quadrants/plot
+- In 2015 & 2020 we measured with 5 quadrants/plot 
+- In all other years we measured with 8 quadrants
 ```{r}
-
-Q4 <- subset(sum.func, year== "2008")
-Q5 <- subset(sum.func, year== "2015" | year== "2020")
-Q8 <- subset(sum.func, year== "2010" | year== "2011" | year== "2012" | year== "2013" | year== "2014" | year== "2016" | year== "2017" | year== "2018" | year== "2019" |year== "2010" |year== "2021")
-
+Q4 <- subset(sum_func, year== "2008")
+Q5 <- subset(sum_func, year== "2015" | year== "2020")
+Q8 <- subset(sum_func, year== "2010" | year== "2011" | year== "2012" | year== "2013" | year== "2014" | year== "2016" | year== "2017" | year== "2018" | year== "2019" |year== "2010" |year== "2021")
 ```
 
-Calculate stats across quads within plots
-
+3. Sum across quadrats in a plot 
 ```{r}
+Q4_sum_avg_quad <- (Q4) %>% 
+  group_by(year, block, plot, func_grp) %>%
+  summarise_at(vars(relcov_func), list(sum_func_quad = sum), na.rm = TRUE)
 
-#Sum across quads in a plot
-Q4_sum_avg_quad <- (Q4) %>% group_by(year, block, plot, func_grp) %>% summarise_at(vars(relcov), list(sum1 = sum), na.rm = TRUE)
+Q5_sum_avg_quad <- (Q5) %>% 
+  group_by(year, block, plot, func_grp)%>% 
+summarise_at(vars(relcov_func), list(sum_func_quad = sum), na.rm = TRUE)
 
-Q5_sum_avg_quad <- (Q5) %>% group_by(year, block, plot, func_grp) %>% summarise_at(vars(relcov), list(sum1 = sum), na.rm = TRUE)
+Q8_sum_avg_quad <- (Q8) %>% 
+  group_by(year, block, plot, func_grp) %>% 
+  summarise_at(vars(relcov_func), list(sum_func_quad = sum), na.rm = TRUE)
+```
 
-Q8_sum_avg_quad <- (Q8) %>% group_by(year, block, plot, func_grp) %>% summarise_at(vars(relcov), list(sum1 = sum), na.rm = TRUE)
-
-#Vectors for averages
-avg.Q4.quad <- c(Q4_sum_avg_quad$sum1/4)
-avg.Q5.quad <- c(Q5_sum_avg_quad$sum1/5)
-avg.Q8.quad <- c(Q8_sum_avg_quad$sum1/8)
+4. Create functions/vectors for calculating average rel_cov bases on # of quadrats then fill a new column with the average
+```{r}
+avg_Q4_quad <- c(Q4_sum_avg_quad$sum_func_quad/4)
+avg_Q5_quad <- c(Q5_sum_avg_quad$sum_func_quad/5)
+avg_Q8_quad <- c(Q8_sum_avg_quad$sum_func_quad/8)
 
 #creates and fills a new column with the average (by diving that sum by the number of reps specified)
-Q4_sum_avg_quad["avg.1"] <-avg.Q4.quad
-Q5_sum_avg_quad["avg.1"] <-avg.Q5.quad
-Q8_sum_avg_quad["avg.1"] <-avg.Q8.quad
+Q4_sum_avg_quad["avg_quad"] <-avg_Q4_quad
+Q5_sum_avg_quad["avg_quad"] <-avg_Q5_quad
+Q8_sum_avg_quad["avg_quad"] <-avg_Q8_quad
+```
 
-#-------------------------------------------------------------------------------------------------------#
+5. Merge all the years back together
+```{r}
 MyMerge       <- function(x, y){
   df            <- merge(x, y, all = TRUE)
   rownames(df)  <- df$Row.names
   df$Row.names  <- NULL
   return(df)
 }
-Avg.func.quad           <- Reduce(MyMerge, list(Q4_sum_avg_quad, Q5_sum_avg_quad, Q8_sum_avg_quad))
+Avg_func_quad           <- Reduce(MyMerge, list(Q4_sum_avg_quad, Q5_sum_avg_quad, Q8_sum_avg_quad))
 
 #export this file
-write.csv(Avg.func.quad, file = "../Derived CSVs/LTER_06MAT_avg_relcov_quad.csv")
+#write.csv(Avg_func_quad, file = "../Derived CSVs/LTER_06MAT_avg_func_quad_allyrs.csv")
 ```
 
-Calculate stats across blocks
-
+### Average across blocks
 ```{r}
-
-Avg.func.block <- (Avg.func.quad) %>% group_by(year, plot, func_grp) %>% summarise_at(vars(avg.1), list(avg.2 = mean, block.sd = sd), na.rm = TRUE)
+Avg_func_block <- (Avg_func_quad) %>% 
+  group_by(year, plot, func_grp) %>% 
+  summarise_at(vars(avg_quad), list(avg_block = mean, block_sd = sd), na.rm = TRUE)
 
 #export this file
-write.csv(Avg.func.block, file = "../Derived CSVs/LTER_06MAT_avg_relcov_block.csv")
-
+write.csv(Avg_func_block, file = "../Derived CSVs/LTER_06MAT_avg_func_block_allyrs.csv")
 ```
 
-\#\#line graph \~ average rel_cov
-
+# Creating stacked bar graph
 ```{r}
-#specify factor levels for fertilization and clipping treatments 
-
-Avg.func.block$plot <- factor(Avg.func.block$plot, levels = c("CT", "F2", "F5", "F10"))
-Avg.func.block$func_grp <- factor(Avg.func.block$func_grp, levels = c("Deciduous shrubs", 
+#specify factor levels for fertilization and clipping treatments (This will tell R in what order to print functional groups or fert treatments on the graph/key)
+Avg_func_block$plot <- factor(Avg_func_block$plot, levels = c("CT", "F2", "F5", "F10"))
+Avg_func_block$func_grp <- factor(Avg_func_block$func_grp, levels = c("Deciduous shrubs", 
                                                                           "Evergreen shrubs", 
-                                                                          "Eri vag",
-                                                                          "Graminoid",
+                                                                          "Grass",
+                                                                          "Sedge",
                                                                           "Forb",
                                                                           "Lichen",
                                                                           "Moss", 
@@ -296,17 +307,17 @@ Avg.func.block$func_grp <- factor(Avg.func.block$func_grp, levels = c("Deciduous
                                                                           "Bare ground"))
 
 #Creates stacked bar graph#
-ggplot(data = Avg.func.block, aes(fill=func_grp, x = year, y = avg.2)) +
+ggplot(data = Avg_func_block, aes(fill=func_grp, x = year, y = avg_block)) +
   geom_bar(position="fill", stat="identity")+ #Percent stacked
   #geom_bar(position="stack", stat="identity")+ #Stacked
   scale_fill_manual(" ", values = c(
     "Deciduous shrubs" = "#004c6d",
                                                            #"Deciduous shrubs" = "red",
                                                            "Evergreen shrubs" = "#6996b3",
-                                                           "Eri vag" = "#036d3f",
-                                                           #"Eri vag" = "red",
-                                                           "Graminoid"="#6fa17e",
-                                                          #"Graminoid"="red",
+                                                           "Grass" = "#036d3f",
+                                                           #"Grass" = "red",
+                                                           "Sedge"="#6fa17e",
+                                                          #"Sedge"="red",
                                                            "Forb"="#c4d6c8",
                                                           #"Forb"="red",
                                                            "Lichen"="#f6e8c3",
@@ -323,17 +334,15 @@ ggplot(data = Avg.func.block, aes(fill=func_grp, x = year, y = avg.2)) +
                       size = 1, linetype = "solid"))+
   scale_y_continuous(breaks= c(0, 0.50, 1))+
   theme(plot.title = element_text(hjust = .5))+
-  labs(y = "Mean relative cover", x = " ")+ 
-  #theme(axis.title.y = element_text(face = "bold"))+
-    #theme(axis.title.x = element_text(face = "bold"))+
-  #theme(legend.direction="horizontal")+
-  #theme(legend.position="bottom")+
+  labs(y = "Mean relative cover (n = 3)", x = " ")+ 
+  #theme(axis.title.y = element_text(face = "bold"))+ #bolds y axis title
+  #theme(legend.position="bottom")+ #puts the key at the bottom of the graph and horizontally
   facet_grid(plot ~ .) #vertically stacked
 
 ggsave("../Figures/LTER_06MAT_stacked_bar_cover.jpeg")
 ```
 
-\#\#STATISTICS
+# Statistics
 
 test for significant differences in rel cover of each species in 2021
 
@@ -342,10 +351,10 @@ used this site (<https://www.scribbr.com/statistics/anova-in-r/>)
 ```{r}
 
 #subset data by year and living plants
-  quad.avg.2021 <- subset(Avg.func.quad, year== "2021") 
+  quad.avg.2021 <- subset(Avg_func_quad, year== "2021") 
   quad.avg.2021.live <- subset(quad.avg.2021, func_grp== "Deciduous shrubs" | func_grp== "Eri vag" | func_grp== "Evergreen shrubs" | func_grp== "Forb" | func_grp== "Graminoid" | func_grp== "Moss" | func_grp== "Lichen")
   
-  quad.avg.2018 <- subset(Avg.func.quad, year== "2018") 
+  quad.avg.2018 <- subset(Avg_func_quad, year== "2018") 
   quad.avg.2018.live <- subset(quad.avg.2018, func_grp== "Deciduous shrubs" | func_grp== "Eri vag" | func_grp== "Evergreen shrubs" | func_grp== "Forb" | func_grp== "Graminoid" | func_grp== "Moss" | func_grp== "Lichen")
 
   #check only living plants remain 
@@ -353,7 +362,7 @@ unique(quad.avg.2021.live$func_grp)
 
 ```
 
-# ANOVA
+### ANOVA
 
 ```{r}
 
@@ -379,7 +388,7 @@ TukeyHSD(ANOVA_21, which = "func_grp")
   #create a column that combines plot and year together to make a new ID for each observation now called "code" BUT also keep     
   #original columns by setting remove=false
 
-  Scat_prep <- Avg.func.quad %>% unite("code", plot:year, remove = FALSE)
+  Scat_prep <- Avg_func_quad %>% unite("code", plot:year, remove = FALSE)
 
   Scat_prep_func <- Scat_prep[c("code", "avg.1", "func_grp")]
 
@@ -401,15 +410,15 @@ TukeyHSD(ANOVA_21, which = "func_grp")
   return(df)
   }
   
-  wide.Avg.func.quad           <- Reduce(MyMerge, list(Scat_yr_plot, Scat_func))
+  wide.Avg_func_quad           <- Reduce(MyMerge, list(Scat_yr_plot, Scat_func))
   
   #replace NA values with 0's
-  wide.Avg.func.quad[is.na(wide.Avg.func.quad)] <- 0
+  wide.Avg_func_quad[is.na(wide.Avg_func_quad)] <- 0
   
   #change year to be a character string 
-  wide.Avg.func.quad$year <- as.character(wide.Avg.func.quad$year)
+  wide.Avg_func_quad$year <- as.character(wide.Avg_func_quad$year)
   
-  write.csv(wide.Avg.func.quad, file = "../Derived CSVs/LTER_06MAT_WIDE_avg_quad.csv")
+  write.csv(wide.Avg_func_quad, file = "../Derived CSVs/LTER_06MAT_WIDE_avg_quad.csv")
 ```
 
 Now make the graphs...
@@ -417,10 +426,10 @@ Now make the graphs...
 ```{r}
 
 #specify factor levels for fertilization
-wide.Avg.func.quad$plot <- factor(wide.Avg.func.quad$plot, levels = c("CT","F2","F5","F10"))
+wide.Avg_func_quad$plot <- factor(wide.Avg_func_quad$plot, levels = c("CT","F2","F5","F10"))
 
 ###Bet nan VS Eri Vag
-ggplot(data = wide.Avg.func.quad, aes(x = `avg.1.Deciduous shrubs`, y = `avg.1.Eri vag`, color = plot)) +
+ggplot(data = wide.Avg_func_quad, aes(x = `avg.1.Deciduous shrubs`, y = `avg.1.Eri vag`, color = plot)) +
   scale_color_manual(values = c("CT" = "#d8b365", 
                                 "F2" = "#41b6c4",
                                 "F5" = "#2c7fb8",
@@ -453,12 +462,12 @@ ggsave("../Figures/LTER_06MAT_correlation_decshrubs_Evag.jpeg")
 ```
 
 ```{r}
-test1 <- subset(wide.Avg.func.quad, plot == "CT")
+test1 <- subset(wide.Avg_func_quad, plot == "CT")
 ```
 
 ```{r}
 ###Bet nan VS Eri Vag (not separated by fert treatment )
-ggplot(data = wide.Avg.func.quad, aes(x = `avg.1.Deciduous shrubs`, y = `avg.1.Eri vag`)) +
+ggplot(data = wide.Avg_func_quad, aes(x = `avg.1.Deciduous shrubs`, y = `avg.1.Eri vag`)) +
    geom_point()+
   geom_smooth(method = "lm", se = TRUE)+
    stat_regline_equation(label.x= 0.55, label.y= 0.2)+
@@ -467,7 +476,7 @@ ggplot(data = wide.Avg.func.quad, aes(x = `avg.1.Deciduous shrubs`, y = `avg.1.E
 
 
 ###Bet nan VS Forbs
-ggplot(data = wide.Avg.func.quad, aes(x = `avg.1.Deciduous shrubs`, y = `avg.1.Forb`, color = plot)) +
+ggplot(data = wide.Avg_func_quad, aes(x = `avg.1.Deciduous shrubs`, y = `avg.1.Forb`, color = plot)) +
   scale_color_manual(values = c("CT" = "#d8b365", 
                                 "F2" = "#41b6c4",
                                 "F5" = "#2c7fb8",
@@ -483,7 +492,7 @@ ggplot(data = wide.Avg.func.quad, aes(x = `avg.1.Deciduous shrubs`, y = `avg.1.F
   facet_grid(plot ~ .)
 
 ###Eri vag VS Forbs
-ggplot(data = wide.Avg.func.quad, aes(x = `avg.1.Forb`, y = `avg.1.Eri vag`, color = plot)) +
+ggplot(data = wide.Avg_func_quad, aes(x = `avg.1.Forb`, y = `avg.1.Eri vag`, color = plot)) +
   scale_color_manual(values = c("CT" = "#d8b365", 
                                 "F2" = "#41b6c4",
                                 "F5" = "#2c7fb8",
@@ -520,8 +529,8 @@ stat_cor(method = "pearson", label.x = .2, label.y = .25)+ #adds p-value
 ```{r}
 #create a column that combines plot and year together to make a new ID for each observation now called "code" BUT also keep original columns by setting remove=false
 
-#PCORD_prep <- Avg.func.block %>% unite("code", plot:year, remove = FALSE)
-PCORD_prep <- Avg.func.quad %>% unite("code", plot:year, remove = FALSE) #for data not-averaged across blocks
+#PCORD_prep <- Avg_func_block %>% unite("code", plot:year, remove = FALSE)
+PCORD_prep <- Avg_func_quad %>% unite("code", plot:year, remove = FALSE) #for data not-averaged across blocks
 
 #PCORD_prep_func <- PCORD_prep[c("code", "avg.2", "func_grp")]
 PCORD_prep_func <- PCORD_prep[c("code", "avg.1", "func_grp")] #for data not-averaged across blocks
@@ -565,11 +574,11 @@ write.csv(PCORD_yr_plot_2008, file = "../Derived CSVs/LTER_O6MAT_yr_plot_QUAD_PC
 write.csv(PCORD_yr_plot_2021, file = "../Derived CSVs/LTER_06MAT_yr_plot_QUAD_PCORD_friendly_2021.csv")
 
 #--------
-Avg.func.quad_2008 <- subset(Avg.func.quad, year== 2008) 
-Avg.func.quad_2021 <- subset(Avg.func.quad, year== 2021) 
+Avg_func_quad_2008 <- subset(Avg_func_quad, year== 2008) 
+Avg_func_quad_2021 <- subset(Avg_func_quad, year== 2021) 
 
-PCORD_prep_2008 <- Avg.func.quad_2008 %>% unite("code", year:plot, remove = FALSE)
-PCORD_prep_2021 <- Avg.func.quad_2021 %>% unite("code", year:plot, remove = FALSE)
+PCORD_prep_2008 <- Avg_func_quad_2008 %>% unite("code", year:plot, remove = FALSE)
+PCORD_prep_2021 <- Avg_func_quad_2021 %>% unite("code", year:plot, remove = FALSE)
 
 PCORD_prep_func_2008 <- PCORD_prep_2008[c("code", "avg.1", "func_grp")]
 PCORD_prep_func_2021 <- PCORD_prep_2021[c("code", "avg.1", "func_grp")]
