@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-### Helpful tips
+# Helpful tips
 
 **Useful keyboard shortcuts**
 *these work for windows, they may be different for Macs*
@@ -34,7 +34,7 @@ getwd()
 #setwd()
 ```
 
-### Downloading/loading packages
+# Downloading/loading packages
 
 Use `install.packages` to download and install a new R package. You only need to do this once, then you can just use `library()` to load it and be able to call functions within it. and load the package libraries. *TIP: It's generally considered best practice to keep the commands to call all the packages you need to use at the top of the document*  
   `tidyr` `dplyr` and `readr` are probably the mosy commonly used packages for data wrangling/cleaning.`ggplot2` is very common for creating publication quality figures.
@@ -47,7 +47,9 @@ library("ggpubr")
 #library("nlme")
 ```
 
-## Data Wrangling
+# Data Wrangling
+
+### Load in data and merge datasets
 
 load in each years .csv files containing the data
 ```{r}
@@ -59,8 +61,8 @@ relcov_21 <- read.csv("../Data/LTER_06MAT_relcov_2021.csv", header = TRUE)
 
 ```
 
-\#look at the data to see what it contains -- *make sure the column names in each data set match so they can be merged together*
-
+look at the data to see what it contains  
+*make sure the column names in each data set match so they can be merged together*
 ```{r}
 head(relcov_21) #opens first 6 rows
 tail(relcov_21) #opens last 6 rows
@@ -68,8 +70,7 @@ summary(relcov_21)
 str(relcov_21) #tells us what data types (numbers, factors, etc) are in the data frame
 ```
 
-\#Then merge the years together... \*\*all the names of columns need to be exactly the same name (capitalization and spaces included)
-
+Then merge the years together...all the names of columns need to be exactly the same name (capitalization and spaces included)
 ```{r}
 
 MyMerge       <- function(x, y){
@@ -81,26 +82,32 @@ MyMerge       <- function(x, y){
 relcov_08_21           <- Reduce(MyMerge, list(relcov_21, relcov_08_20))
 
 
-write.csv(relcov_08_21, file = "../Derived CSVs/LTER_06MAT_relcov_all.csv")
+write.csv(relcov_08_21, file = "../Derived CSVs/LTER_06MAT_relcov_allyrs.csv")
 ```
+**make sure the # of Obs in the 1st data set + the 2nd match the # of obs in the merged data set**
 
-**make sure the \# of Obs in the 1st data set + the 2nd match the \# of obs in the merged data set**
+### Remove any data that you will not need for the analysis
 
-*Remove any data that you will not need for the analysis*\
 In this case we can remove all the data from block 4
-
 ```{r}
-relcov_08_21 <- relcov_08_21 %>% filter(-block==4)
+relcov_08_21 <- relcov_08_21 %>% filter(block=="1" |block=="2" | block=="3")
 ```
 
--- Check unique vales in each column to make sure that there are not naming errors --
+### Fix naming convention errors
 
+Rename "rel.cov" column to "rel_cov"
+```{r}
+relcov_08_21 <- relcov_08_21 %>%
+  rename(rel_cov = rel.cov)
+```
+
+
+Check unique vales in each column to make sure that there are not naming errors
 ```{r}
 unique(relcov_08_21$species)
 ```
 
--- if there are mistakes then rename them using the code below and recheck unique values again to make sure the recode worked and you didn't loose any observations --
-
+If there are mistakes then rename them using the code below and recheck unique values again to make sure the recode worked. *make sure you didn't loose any observations*
 ```{r}
 
 #fix naming convention errors 
@@ -115,68 +122,71 @@ recode("St. D. Led Pal" = "St. D", "Dead Evrg" = "St. D", "Dead Bet" = "St. D", 
 relcov_08_21$species <- recode(relcov_08_21$species, "Eri vag litter" = "litter")
 ```
 
-Get overall average cover by species for the CT plots
-
+**Get overall average cover by species for the CT plots (used for table describing what species were assigned to each functional group)**
 ```{r}
 species.avg.ct <- (relcov_08_21) %>%
   filter(plot== "CT")%>%
-  group_by(species, plot)%>% 
-  summarise(spec.avg = mean(rel.cov, na.rm = TRUE), n = n(), sd = sd(rel.cov, na.rm = TRUE))
+  group_by(species, plot)%>% #You don't need to list plot here, I just did it as a logic check 
+  summarise(spec.avg = mean(rel_cov, na.rm = TRUE), n = n(), sd = sd(rel_cov, na.rm = TRUE))
 
 write.csv(species.avg.ct, file = "../Derived CSVs/LTER_06MAT_species_avg_allyrs.csv")
 ```
 
-\~vectors for assigning functional groups\~
-
+### Creating functional groups
+Create vectors for assigning functional groups (The name of the functional groups that you will use to fill in the new column you will create called "func_grp")
 ```{r}
-
-BARE <- c("Bare ground")
-DEC <- c("Deciduous shrubs")
-EVRG <- c("Evergreen shrubs")
-GRASS <- c("Grass")
-SED <- c("Sedge")
-LICH <- c("Lichen")
-LIT <- c("Litter")
-MOSS <- c("Moss")
-FORB <- c("Forb")
-STD <- c("Standing dead")
-
+bare <- c("Bare ground")
+dec_shrub <- c("Deciduous shrubs")
+ev_shrub <- c("Evergreen shrubs")
+grass <- c("Grass")
+sedge <- c("Sedge")
+lichen <- c("Lichen")
+litter <- c("Litter")
+moss <- c("Moss")
+Forb <- c("Forb")
+St.D <- c("Standing dead")
 ```
 
-\~subset the dataset by species then reassigned with functional groups
-
+Subset the dataset by species within given functional groups 
 ```{r}
-bare <- subset(relcov_08_21, species== "bare" |species== "frost boil")
-  bare["func.group"] <- BARE
 
-dec <- subset(relcov_08_21, species== "Bet nan"|species== "Vac uli"|species== "Sal pul"|species== "Arc alp"|"Sal phl"|species== "Sal arc"|species== "Sal ret")
-  dec["func.group"] <-DEC
+bg <- subset(relcov_08_21, species== "bare" |species== "frost boil")
+ 
+ds <- subset(relcov_08_21, species== "Bet nan"| species== "Vac uli"| species== "Sal pul"| species== "Arc alp"| species== "Sal phl"| species== "Sal arc"|species== "Sal ret")
 
-evrg <- subset(relcov_08_21, species== "Emp nig"|species== "Led pal"|species=="Vac vit"|species== "Cas tet"|species== "And pol"|species== "Dry int")
-  evrg["func.group"] <-EVRG
+es <- subset(relcov_08_21, species== "Emp nig"|species== "Led pal"|species=="Vac vit"|species== "Cas tet"|species== "And pol"|species== "Dry int")
 
-grass <- subset(relcov_08_21, species== "Cal can" | species== "grass" | species== "Car big" | species== "Arc lat" | species== "Cal lap" | species== "Fes sp."| species== "graminoid")
- grass["func.group"] <-GRASS
+gr <- subset(relcov_08_21, species== "Cal can" | species== "grass" | species== "Car big" | species== "Arc lat" | species== "Cal lap" | species== "Fes sp."| species== "graminoid")
 
 sed <- subset(relcov_08_21, species== "Eri vag")
-  sed["func.group"] <-SED
 
-forb <- subset(relcov_08_21, species== "Ped lap"|species== "Pol bis"|species== "Rub cha"|species== "Luz sp."|species== "Pet sp."|species== "Hie alp"|species== "Ped sp."|species== "Arnica sp."|species== "Ste edw"|species== "Pet fri"|species== "Ste lon"|species== "Sau ang"|species== "Hie sp."|species== "Min sp."|species== "Tof sp."|species== "Ste sp."|species== "dicot"|species== "Lag gla"|species== "Sax pun"|species== "Pyr sec"|species== "Equ arv"|species== "Pol viv"|species== "Tof coc"|species== "Pyr sp.")
-  forb["func.group"] <-FORB
+fb <- subset(relcov_08_21, species== "Ped lap"|species== "Pol bis"|species== "Rub cha"|species== "Luz sp."|species== "Pet sp."|species== "Hie alp"|species== "Ped sp."|species== "Arnica sp."|species== "Ste edw"|species== "Pet fri"|species== "Ste lon"|species== "Sau ang"|species== "Hie sp."|species== "Min sp."|species== "Tof sp."|species== "Ste sp."|species== "dicot"|species== "Lag gla"|species== "Sax pun"|species== "Pyr sec"|species== "Equ arv"|species== "Pol viv"|species== "Tof coc"|species== "Pyr sp.")
 
 lich <- subset(relcov_08_21, species== "lichen")
-  lich["func.group"] <-LICH  
-
+ 
 lit <- subset(relcov_08_21, species== "litter")
-  lit["func.group"] <-LIT
   
-moss <- subset(relcov_08_21, species== "moss")
-  moss["func.group"] <-MOSS
-  
+ms <- subset(relcov_08_21, species== "moss")
+
 std <- subset(relcov_08_21, species== "St. D")
-  std["func.group"] <-STD
+  
 ```
 
+Then reassigned these groups with their given functional group names in a new coulmn called "func_grp".
+```{r}
+bg["func_grp"] <-bare
+ds["func_grp"] <-dec_shrub
+es["func_grp"] <-ev_shrub
+gr["func_grp"] <-grass
+sed["func_grp"] <-sedge
+fb["func_grp"] <-Forb
+lich["func_grp"] <-lichen
+lit["func_grp"] <-litter
+ms["func_grp"] <-moss
+std["func_grp"] <-St.D
+```
+
+Then merge these groups back together into one dataset. *Make sure the number of observations in `relcov_func_08_21` matches `relcov_08_21`, but `relcov_func_08_21` should have one more variable (the new func_grp coulmn you created),
 ```{r}
 
 MyMerge       <- function(x, y){
@@ -185,27 +195,36 @@ MyMerge       <- function(x, y){
   df$Row.names  <- NULL
   return(df)
 }
-relcov.func_08_21           <- Reduce(MyMerge, list(bg1, bg2, ds1, ds2, ds3, ds4, ds5, ds6, ds7, es1, es2, es3, es4, es5, es6, gram1, gram2, gram3, forb1, forb2, forb3, forb4, forb5, forb6, forb7, forb8, forb9, forb10, forb11, forb12, forb13, forb14, forb15, forb16, forb17, forb18, forb19, forb20, forb21, forb22, forb23, forb24, lichen, litter, ms, standing.d))
+relcov_func_08_21           <- Reduce(MyMerge, list(bg, ds, es, gr, sed, fb, lich, lit, ms, std))
 
 
 #export this file
 
-write.csv(relcov.func_08_21, file = "../Derived CSVs/LTER_06MAT_relcov_func_all.csv")
+write.csv(relcov_func_08_21, file = "../Derived CSVs/LTER_06MAT_relcov_funcgrp_allyrs.csv")
 
 ```
 
-## Statistics & graphing
+# Statistics & graphing  
 
-\#combine renamed groups
+### Average across quadrats within a plot
 
+1. This step sums relative cover across species of a given functional group within each individual quadrat. If you do not do this then you will be averaging across all the species and quadrats within a functional group at the same time, instead of averaging the total relative cover of a functional group across the 8 quadrats. Basically you will deflating the average cover, so make sure you do this step!!! :)
 ```{r}
-
-#first we must sum the relative cover values across function groups within quadrats
-sum.func <- (relcov.func_08_21) %>% group_by(year, block, plot, quad, func.group) %>% summarise_at(vars(rel.cov), list(relcov = sum ), na.rm = TRUE)
+sum.func <- (relcov_func_08_21) %>% group_by(year, block, plot, quad, func_grp) %>% summarise_at(vars(rel_cov), list(relcov_func = sum ), na.rm = TRUE)
 ```
 
-subset into different years based on \# of quads measured per plot
+**Get overall average cover by functional group for the CT plots (used for table describing what species were assigned to each functional group)**
+```{r}
+func_grp_avg_ct <- (sum.func) %>%
+  filter(plot== "CT")%>%
+  group_by(func_grp, plot)%>% #You don't need to list plot here, I just did it as a logic check 
+  summarise(func_avg = mean(relcov_func, na.rm = TRUE), n = n(), sd = sd(relcov_func, na.rm = TRUE))
 
+write.csv(func_grp_avg_ct, file = "../Derived CSVs/LTER_06MAT_funcgrp_avg_allyrs.csv")
+```
+
+
+Subset into different years based on # of quads measured per plot
 ```{r}
 
 Q4 <- subset(sum.func, year== "2008")
@@ -219,11 +238,11 @@ Calculate stats across quads within plots
 ```{r}
 
 #Sum across quads in a plot
-Q4_sum_avg_quad <- (Q4) %>% group_by(year, block, plot, func.group) %>% summarise_at(vars(relcov), list(sum1 = sum), na.rm = TRUE)
+Q4_sum_avg_quad <- (Q4) %>% group_by(year, block, plot, func_grp) %>% summarise_at(vars(relcov), list(sum1 = sum), na.rm = TRUE)
 
-Q5_sum_avg_quad <- (Q5) %>% group_by(year, block, plot, func.group) %>% summarise_at(vars(relcov), list(sum1 = sum), na.rm = TRUE)
+Q5_sum_avg_quad <- (Q5) %>% group_by(year, block, plot, func_grp) %>% summarise_at(vars(relcov), list(sum1 = sum), na.rm = TRUE)
 
-Q8_sum_avg_quad <- (Q8) %>% group_by(year, block, plot, func.group) %>% summarise_at(vars(relcov), list(sum1 = sum), na.rm = TRUE)
+Q8_sum_avg_quad <- (Q8) %>% group_by(year, block, plot, func_grp) %>% summarise_at(vars(relcov), list(sum1 = sum), na.rm = TRUE)
 
 #Vectors for averages
 avg.Q4.quad <- c(Q4_sum_avg_quad$sum1/4)
@@ -252,20 +271,20 @@ Calculate stats across blocks
 
 ```{r}
 
-Avg.func.block <- (Avg.func.quad) %>% group_by(year, plot, func.group) %>% summarise_at(vars(avg.1), list(avg.2 = mean, block.sd = sd), na.rm = TRUE)
+Avg.func.block <- (Avg.func.quad) %>% group_by(year, plot, func_grp) %>% summarise_at(vars(avg.1), list(avg.2 = mean, block.sd = sd), na.rm = TRUE)
 
 #export this file
 write.csv(Avg.func.block, file = "../Derived CSVs/LTER_06MAT_avg_relcov_block.csv")
 
 ```
 
-\#\#line graph \~ average rel.cov
+\#\#line graph \~ average rel_cov
 
 ```{r}
 #specify factor levels for fertilization and clipping treatments 
 
 Avg.func.block$plot <- factor(Avg.func.block$plot, levels = c("CT", "F2", "F5", "F10"))
-Avg.func.block$func.group <- factor(Avg.func.block$func.group, levels = c("Deciduous shrubs", 
+Avg.func.block$func_grp <- factor(Avg.func.block$func_grp, levels = c("Deciduous shrubs", 
                                                                           "Evergreen shrubs", 
                                                                           "Eri vag",
                                                                           "Graminoid",
@@ -277,7 +296,7 @@ Avg.func.block$func.group <- factor(Avg.func.block$func.group, levels = c("Decid
                                                                           "Bare ground"))
 
 #Creates stacked bar graph#
-ggplot(data = Avg.func.block, aes(fill=func.group, x = year, y = avg.2)) +
+ggplot(data = Avg.func.block, aes(fill=func_grp, x = year, y = avg.2)) +
   geom_bar(position="fill", stat="identity")+ #Percent stacked
   #geom_bar(position="stack", stat="identity")+ #Stacked
   scale_fill_manual(" ", values = c(
@@ -324,13 +343,13 @@ used this site (<https://www.scribbr.com/statistics/anova-in-r/>)
 
 #subset data by year and living plants
   quad.avg.2021 <- subset(Avg.func.quad, year== "2021") 
-  quad.avg.2021.live <- subset(quad.avg.2021, func.group== "Deciduous shrubs" | func.group== "Eri vag" | func.group== "Evergreen shrubs" | func.group== "Forb" | func.group== "Graminoid" | func.group== "Moss" | func.group== "Lichen")
+  quad.avg.2021.live <- subset(quad.avg.2021, func_grp== "Deciduous shrubs" | func_grp== "Eri vag" | func_grp== "Evergreen shrubs" | func_grp== "Forb" | func_grp== "Graminoid" | func_grp== "Moss" | func_grp== "Lichen")
   
   quad.avg.2018 <- subset(Avg.func.quad, year== "2018") 
-  quad.avg.2018.live <- subset(quad.avg.2018, func.group== "Deciduous shrubs" | func.group== "Eri vag" | func.group== "Evergreen shrubs" | func.group== "Forb" | func.group== "Graminoid" | func.group== "Moss" | func.group== "Lichen")
+  quad.avg.2018.live <- subset(quad.avg.2018, func_grp== "Deciduous shrubs" | func_grp== "Eri vag" | func_grp== "Evergreen shrubs" | func_grp== "Forb" | func_grp== "Graminoid" | func_grp== "Moss" | func_grp== "Lichen")
 
   #check only living plants remain 
-unique(quad.avg.2021.live$func.group)
+unique(quad.avg.2021.live$func_grp)
 
 ```
 
@@ -338,23 +357,23 @@ unique(quad.avg.2021.live$func.group)
 
 ```{r}
 
-ANOVA_21<- aov(avg.1 ~ plot + func.group + plot:func.group, data = quad.avg.2021.live)
+ANOVA_21<- aov(avg.1 ~ plot + func_grp + plot:func_grp, data = quad.avg.2021.live)
 summary(ANOVA_21)
 
-ANOVA_18<- aov(avg.1 ~ plot + func.group + plot:func.group, data = quad.avg.2018.live)
+ANOVA_18<- aov(avg.1 ~ plot + func_grp + plot:func_grp, data = quad.avg.2018.live)
 summary(ANOVA_18)
 ```
 
 ```{r}
 #tukey's HSD
       
-TukeyHSD(ANOVA_21, which = "func.group")
+TukeyHSD(ANOVA_21, which = "func_grp")
       
 ```
 
-## \#\#Scatter plots \~ average rel.cov of species vs other species (all years, not averaged across blocks)
+## \#\#Scatter plots \~ average rel_cov of species vs other species (all years, not averaged across blocks)
 
-\#first we need to transform the data from long to wide format so that each functional groups rel.cov is in a separate column
+\#first we need to transform the data from long to wide format so that each functional groups rel_cov is in a separate column
 
 ```{r}
   #create a column that combines plot and year together to make a new ID for each observation now called "code" BUT also keep     
@@ -362,7 +381,7 @@ TukeyHSD(ANOVA_21, which = "func.group")
 
   Scat_prep <- Avg.func.quad %>% unite("code", plot:year, remove = FALSE)
 
-  Scat_prep_func <- Scat_prep[c("code", "avg.1", "func.group")]
+  Scat_prep_func <- Scat_prep[c("code", "avg.1", "func_grp")]
 
   Scat_prep_yr_plot <- Scat_prep[c("code", "plot", "year", "block")]
 
@@ -373,7 +392,7 @@ TukeyHSD(ANOVA_21, which = "func.group")
     #install.packages("reshape2")
   library("reshape2")
 
-  Scat_func <- reshape(Scat_prep_func, idvar = "code", timevar = "func.group", direction = "wide")
+  Scat_func <- reshape(Scat_prep_func, idvar = "code", timevar = "func_grp", direction = "wide")
 
   MyMerge       <- function(x, y){
   df            <- merge(x, y, all = TRUE)
@@ -504,8 +523,8 @@ stat_cor(method = "pearson", label.x = .2, label.y = .25)+ #adds p-value
 #PCORD_prep <- Avg.func.block %>% unite("code", plot:year, remove = FALSE)
 PCORD_prep <- Avg.func.quad %>% unite("code", plot:year, remove = FALSE) #for data not-averaged across blocks
 
-#PCORD_prep_func <- PCORD_prep[c("code", "avg.2", "func.group")]
-PCORD_prep_func <- PCORD_prep[c("code", "avg.1", "func.group")] #for data not-averaged across blocks
+#PCORD_prep_func <- PCORD_prep[c("code", "avg.2", "func_grp")]
+PCORD_prep_func <- PCORD_prep[c("code", "avg.1", "func_grp")] #for data not-averaged across blocks
 
 #PCORD_prep_yr_plot <- PCORD_prep[c("code", "plot", "year")]
 PCORD_prep_yr_plot <- PCORD_prep[c("code", "plot", "year", "block")] #for data not-averaged across blocks
@@ -520,7 +539,7 @@ PCORD_yr_plot <- unique(PCORD_prep_yr_plot)
 #install.packages("reshape2")
 library("reshape2")
 
-PCORD_WIDE_func <- reshape(PCORD_prep_func, idvar = "code", timevar = "func.group", direction = "wide")
+PCORD_WIDE_func <- reshape(PCORD_prep_func, idvar = "code", timevar = "func_grp", direction = "wide")
 
 #replace NA's with 0's  
 PCORD_WIDE_func[is.na(PCORD_WIDE_func)] <- 0
@@ -552,15 +571,15 @@ Avg.func.quad_2021 <- subset(Avg.func.quad, year== 2021)
 PCORD_prep_2008 <- Avg.func.quad_2008 %>% unite("code", year:plot, remove = FALSE)
 PCORD_prep_2021 <- Avg.func.quad_2021 %>% unite("code", year:plot, remove = FALSE)
 
-PCORD_prep_func_2008 <- PCORD_prep_2008[c("code", "avg.1", "func.group")]
-PCORD_prep_func_2021 <- PCORD_prep_2021[c("code", "avg.1", "func.group")]
+PCORD_prep_func_2008 <- PCORD_prep_2008[c("code", "avg.1", "func_grp")]
+PCORD_prep_func_2021 <- PCORD_prep_2021[c("code", "avg.1", "func_grp")]
 
 library("reshape2")
 
-PCORD_WIDE_func_2008 <- reshape(PCORD_prep_func_2008, idvar = "code", timevar = "func.group", direction = "wide")
+PCORD_WIDE_func_2008 <- reshape(PCORD_prep_func_2008, idvar = "code", timevar = "func_grp", direction = "wide")
 PCORD_WIDE_func_2008[is.na(PCORD_WIDE_func_2008)] <- 0
 
-PCORD_WIDE_func_2021 <- reshape(PCORD_prep_func_2021, idvar = "code", timevar = "func.group", direction = "wide")
+PCORD_WIDE_func_2021 <- reshape(PCORD_prep_func_2021, idvar = "code", timevar = "func_grp", direction = "wide")
 PCORD_WIDE_func_2021[is.na(PCORD_WIDE_func_2021)] <- 0
 
 #----------
