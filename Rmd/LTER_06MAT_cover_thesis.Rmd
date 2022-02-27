@@ -36,9 +36,15 @@ getwd()
 
 # Downloading/loading packages
 
-Use `install.packages` to download and install a new R package. You only need to do this once, then you can just use `library()` to load it and be able to call functions within it. and load the package libraries. *TIP: It's generally considered best practice to keep the commands to call all the packages you need to use at the top of the document*  
-  `tidyr` `dplyr` and `readr` are probably the mosy commonly used packages for data wrangling/cleaning.`ggplot2` is very common for creating publication quality figures.
+Use `install.packages` to download and install a new R package. You only need to do this once, then you can just use `library()` to load it and be able to call functions within it. and load the package libraries.  
+
+*TIP: It's generally considered best practice to keep the commands to call all the packages you need to use at the top of the document*  
+
+`tidyr`, `dplyr`, and `readr` are probably the most commonly used packages for data wrangling/cleaning.`ggplot2` is very common for creating publication quality figures.  
+
+*Note: The order which you install packages is important. Functions with the same names will be masked by packages loaded in after the previous* Ex: The `select()` function from `MASS` will be masked by `select()` from `dplyar` 
 ```{r}
+library("MASS") #used for post-hoc test (lda)
 library("tidyr")
 library("dplyr")
 library("readr")
@@ -90,7 +96,7 @@ write.csv(relcov_08_21, file = "../Derived CSVs/LTER_06MAT_relcov_allyrs.csv")
 
 In this case we can remove all the data from block 4
 ```{r}
-relcov_08_21 <- relcov_08_21 %>% filter(block=="1" |block=="2" | block=="3")
+relcov_08_21 <- relcov_08_21 %>% filter(block != "4")
 ```
 
 ### Fix naming convention errors
@@ -139,7 +145,8 @@ write.csv(species.avg.ct, file = "../Derived CSVs/LTER_06MAT_species_avg_allyrs.
 ```
 
 ### Creating functional groups
-Create vectors for assigning functional groups (The name of the functional groups that you will use to fill in the new column you will create called "func_grp")
+
+1. Create vectors for assigning functional groups (The name of the functional groups that you will use to fill in the new column you will create called "func_grp")
 ```{r}
 bare <- c("Bare ground")
 dec_shrub <- c("Deciduous shrubs")
@@ -153,7 +160,7 @@ Forb <- c("Forb")
 St.D <- c("Standing dead")
 ```
 
-Subset the dataset by species within given functional groups 
+2. Subset the dataset by species within given functional groups 
 ```{r}
 
 bg <- subset(relcov_08_21, species== "bare" |species== "frost boil")
@@ -178,7 +185,7 @@ std <- subset(relcov_08_21, species== "St. D")
   
 ```
 
-Then reassigned these groups with their given functional group names in a new coulmn called "func_grp".
+3. Then reassigned these groups with their given functional group names in a new column called "func_grp".
 ```{r}
 bg["func_grp"] <-bare
 ds["func_grp"] <-dec_shrub
@@ -192,7 +199,7 @@ ms["func_grp"] <-moss
 std["func_grp"] <-St.D
 ```
 
-Then merge these groups back together into one dataset. *Make sure the number of observations in `relcov_func_08_21` matches `relcov_08_21`, but `relcov_func_08_21` should have one more variable (the new func_grp column you created),
+4. Then merge these groups back together into one dataset. *Make sure the number of observations in `relcov_func_08_21` matches `relcov_08_21`, but `relcov_func_08_21` should have one more variable (the new func_grp column you created),
 ```{r}
 
 MyMerge       <- function(x, y){
@@ -344,40 +351,60 @@ ggsave("../Figures/LTER_06MAT_stacked_bar_cover.jpeg")
 
 # Statistics
 
-test for significant differences in rel cover of each species in 2021
+### Check assumptons
+*MANOVA can be used in certain conditions:*
 
-used this site (<https://www.scribbr.com/statistics/anova-in-r/>)
+* The dependent variables should be normally distribute within groups. The R function `mshapiro.test( )` **[in the mvnormtest package]** can be used to perform the Shapiro-Wilk test for multivariate normality. This is useful in the case of MANOVA, which assumes multivariate normality.
+* Homogeneity of variances across the range of predictors.
+* Linearity between all pairs of dependent variables, all pairs of covariates, and all dependent variable-covariate pairs in each cell
 
+### Calulate MAOVA 
+Test for significant differences in rel cover of each species in 2021
+
+- followed instructions from [this](http://www.sthda.com/english/wiki/manova-test-in-r-multivariate-analysis-of-variance) site
+
+1. Prep the data 
+  a. Filter for only 2021 or 2020 data respectivly
+  b. Filter out non-living species (Standing dead, Litter, Bare ground)
+  c. Drop the column that still contains the sum of cover that you used to get the average
+  d. Convert from long to wide format 
+  e. Change name of Deciduous and Evergreen shrub column to drop "shrubs" so there are no spaces in the name
 ```{r}
+data_MANOVA_2008 <- Avg_func_quad %>%
+  filter(year=="2008" & func_grp!="Standing dead" & func_grp!="Litter" & func_grp!="Bare ground")%>%
+  select(-sum_func_quad) %>%
+  pivot_wider(names_from = func_grp, values_from = avg_quad) %>%
+  rename("Deciduous" = "Deciduous shrubs", "Evergreen" = "Evergreen shrubs")
 
-#subset data by year and living plants
-  quad.avg.2021 <- subset(Avg_func_quad, year== "2021") 
-  quad.avg.2021.live <- subset(quad.avg.2021, func_grp== "Deciduous shrubs" | func_grp== "Eri vag" | func_grp== "Evergreen shrubs" | func_grp== "Forb" | func_grp== "Graminoid" | func_grp== "Moss" | func_grp== "Lichen")
-  
-  quad.avg.2018 <- subset(Avg_func_quad, year== "2018") 
-  quad.avg.2018.live <- subset(quad.avg.2018, func_grp== "Deciduous shrubs" | func_grp== "Eri vag" | func_grp== "Evergreen shrubs" | func_grp== "Forb" | func_grp== "Graminoid" | func_grp== "Moss" | func_grp== "Lichen")
+data_MANOVA_2021 <- Avg_func_quad %>%
+  filter(year=="2021" & func_grp!="Standing dead" & func_grp!="Litter" & func_grp!="Bare ground")%>%
+  select(-sum_func_quad) %>%
+  pivot_wider(names_from = func_grp, values_from = avg_quad) %>%
+  rename("Deciduous" = "Deciduous shrubs", "Evergreen" = "Evergreen shrubs")
 
-  #check only living plants remain 
-unique(quad.avg.2021.live$func_grp)
-
+head(data_MANOVA_2008)
 ```
 
-### ANOVA
-
+2. Run the MANOVAs
 ```{r}
+MANOVA_08<- manova(cbind(Deciduous, Evergreen, Forb, Grass, Lichen, Moss, Sedge) ~ plot, data = data_MANOVA_2008)
+summary.aov(MANOVA_08)
 
-ANOVA_21<- aov(avg.1 ~ plot + func_grp + plot:func_grp, data = quad.avg.2021.live)
-summary(ANOVA_21)
-
-ANOVA_18<- aov(avg.1 ~ plot + func_grp + plot:func_grp, data = quad.avg.2018.live)
-summary(ANOVA_18)
+#MANOVA_21<- manova(cbind(Deciduous, Evergreen, Forb, Grass, Lichen, Moss, Sedge) ~ plot, data = data_MANOVA_2021)
+#summary.aov(MANOVA_21)
 ```
 
+3. Post hoc tests 
+  a. followed instructions from [this](https://www.reneshbedre.com/blog/manova.html#post-hoc-test) site
 ```{r}
-#tukey's HSD
-      
-TukeyHSD(ANOVA_21, which = "func_grp")
-      
+
+posthoc_2008 <- lda(data_MANOVA_2008$plot ~ cbind(Deciduous, Evergreen, Forb, Grass, Lichen, Moss, Sedge))
+ 
+dep_vars <- cbind(df$height, df$canopy_vol)
+fit <- manova(dep_vars ~ plant_var, data = df)
+
+post_hoc <- lda(df$plant_var ~ dep_vars, CV=F)
+post_hoc     
 ```
 
 ## \#\#Scatter plots \~ average rel_cov of species vs other species (all years, not averaged across blocks)
