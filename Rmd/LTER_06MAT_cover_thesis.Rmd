@@ -9,7 +9,20 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Helpful tips
+```{r, include=FALSE}
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color,
+      x)
+  } else x
+}
+```
+
+`r colorize("words go here", "red")`
+
+# Helpful Tips  
 
 **Useful keyboard shortcuts**
 *these work for windows, they may be different for Macs*
@@ -29,35 +42,44 @@ rm(list = ls())
 ```
 
 Use this`getwd()` to check working directory. Will most likely be whatever folder your Rmd file is in. If you need to change it for some reason use `setwd()` 
-```{r, echo = FALSE}
+```{r, echo = FALSE, include=FALSE}
 getwd()
 #setwd()
 ```
+
+
+
+
 
 # Downloading/loading packages
 
 Use `install.packages` to download and install a new R package. You only need to do this once, then you can just use `library()` to load it and be able to call functions within it. and load the package libraries.  
 
-*TIP: It's generally considered best practice to keep the commands to call all the packages you need to use at the top of the document*  
+**TIP: It's generally considered best practice to keep the commands to call all the packages you need to use at the top of the document**  
 
 `tidyr`, `dplyr`, and `readr` are probably the most commonly used packages for data wrangling/cleaning.`ggplot2` is very common for creating publication quality figures.  
 
-*Note: The order which you install packages is important. Functions with the same names will be masked by packages loaded in after the previous* Ex: The `select()` function from `MASS` will be masked by `select()` from `dplyar` 
-```{r}
+**Note: The order which you install packages is important. Functions with the same names will be masked by packages loaded in after the previous.**  
+Ex: The `select()` function from `MASS` will be masked by `select()` from `dplyar` 
+```{r, message=FALSE, warning=FALSE}
 library("MASS") #used for post-hoc test (lda)
 library("tidyr")
 library("dplyr")
 library("readr")
 library("ggplot2")
 library("ggpubr")
-#library("nlme")
 ```
+
+
+
+
+
 
 # Data Wrangling
 
-### Load in data and merge datasets
+### Load in data and merge datasets:
 
-load in each years .csv files containing the data
+Load in each years .csv files containing the data
 ```{r}
 #TH_2018 <- read.csv(file.choose(), header = TRUE)
 
@@ -67,9 +89,9 @@ relcov_21 <- read.csv("../Data/LTER_06MAT_relcov_2021.csv", header = TRUE)
 
 ```
 
-look at the data to see what it contains  
-*make sure the column names in each data set match so they can be merged together*
-```{r}
+Look at the data to see what it contains  
+*Make sure the column names in each data set match so they can be merged together*
+```{r, message=FALSE, results='hide'}
 head(relcov_21) #opens first 6 rows
 tail(relcov_21) #opens last 6 rows
 summary(relcov_21)
@@ -90,7 +112,7 @@ relcov_08_21           <- Reduce(MyMerge, list(relcov_21, relcov_08_20))
 
 write.csv(relcov_08_21, file = "../Derived CSVs/LTER_06MAT_relcov_allyrs.csv")
 ```
-**make sure the # of Obs in the 1st data set + the 2nd match the # of obs in the merged data set**
+**Make sure the # of Obs in the 1st data set + the 2nd match the # of obs in the merged data set**
 
 ### Remove any data that you will not need for the analysis
 
@@ -108,7 +130,7 @@ relcov_08_21 <- relcov_08_21 %>%
 ```
 
 Check unique vales in each column to make sure that there are not naming errors
-```{r}
+```{r, results='hide'}
 unique(relcov_08_21$species)
 ```
 
@@ -135,7 +157,7 @@ relcov_08_21 <- (relcov_08_21) %>% group_by(year, block, plot, quad, species) %>
 ```
 
 **Get overall average cover by species for the CT plots (used for table describing what species were assigned to each functional group)**
-```{r}
+```{r, message=FALSE}
 species.avg.ct <- (relcov_08_21) %>%
   filter(plot== "CT")%>%
   group_by(species, plot)%>% #You don't need to list plot here, I just did it as a logic check 
@@ -217,6 +239,10 @@ write.csv(relcov_func_08_21, file = "../Derived CSVs/LTER_06MAT_relcov_funcgrp_a
 
 ```
 
+
+
+
+
 # Statistics & graphing  
 
 ### Average across quadrats within a plot
@@ -226,8 +252,8 @@ write.csv(relcov_func_08_21, file = "../Derived CSVs/LTER_06MAT_relcov_funcgrp_a
 sum_func <- (relcov_func_08_21) %>% group_by(year, block, plot, quad, func_grp) %>% summarise_at(vars(rel_cov), list(relcov_func = sum ), na.rm = TRUE)
 ```
 
-**Get overall average cover by functional group for the CT plots (used for table describing what species were assigned to each functional group)**
-```{r}
+    **Get overall average cover by functional group for the CT plots (used for table describing what species were assigned to each functional group)**
+```{r, message=FALSE}
 func_grp_avg_ct <- (sum_func) %>%
   filter(plot== "CT")%>%
   group_by(func_grp, plot)%>% #You don't need to list plot here, I just did it as a logic check 
@@ -298,8 +324,8 @@ Avg_func_block <- (Avg_func_quad) %>%
 write.csv(Avg_func_block, file = "../Derived CSVs/LTER_06MAT_avg_func_block_allyrs.csv")
 ```
 
-# Creating stacked bar graph
-```{r}
+### Creating stacked bar graph
+```{r, message=FALSE}
 #specify factor levels for fertilization and clipping treatments (This will tell R in what order to print functional groups or fert treatments on the graph/key)
 Avg_func_block$plot <- factor(Avg_func_block$plot, levels = c("CT", "F2", "F5", "F10"))
 Avg_func_block$func_grp <- factor(Avg_func_block$func_grp, levels = c("Deciduous shrubs", 
@@ -349,26 +375,27 @@ ggplot(data = Avg_func_block, aes(fill=func_grp, x = year, y = avg_block)) +
 ggsave("../Figures/LTER_06MAT_stacked_bar_cover.jpeg")
 ```
 
-# Statistics
+### MANOVA
+**live plant functional groups vs fertilization**
 
-### Check assumptons
+#### Check assumptions
 *MANOVA can be used in certain conditions:*
 
-* The dependent variables should be normally distribute within groups. The R function `mshapiro.test( )` **[in the mvnormtest package]** can be used to perform the Shapiro-Wilk test for multivariate normality. This is useful in the case of MANOVA, which assumes multivariate normality.
-* Homogeneity of variances across the range of predictors.
-* Linearity between all pairs of dependent variables, all pairs of covariates, and all dependent variable-covariate pairs in each cell
+- The dependent variables should be normally distribute within groups. The R function `mshapiro.test( )` **[in the mvnormtest package]** can be used to perform the Shapiro-Wilk test for multivariate normality. This is useful in the case of MANOVA, which assumes multivariate normality.
+- Homogeneity of variances across the range of predictors.
+- Linearity between all pairs of dependent variables, all pairs of covariates, and all dependent variable-covariate pairs in each cell
 
-### Calulate MAOVA 
+#### Calulating the MAOVA 
 Test for significant differences in rel cover of each species in 2021
 
 - followed instructions from [this](http://www.sthda.com/english/wiki/manova-test-in-r-multivariate-analysis-of-variance) site
 
-1. Prep the data 
-  a. Filter for only 2021 or 2020 data respectivly
-  b. Filter out non-living species (Standing dead, Litter, Bare ground)
-  c. Drop the column that still contains the sum of cover that you used to get the average
-  d. Convert from long to wide format 
-  e. Change name of Deciduous and Evergreen shrub column to drop "shrubs" so there are no spaces in the name
+#### Prep the data 
+  1. Filter for only 2021 or 2020 data respectivly
+  1. Filter out non-living species (Standing dead, Litter, Bare ground)
+  1. Drop the column that still contains the sum of cover that you used to get the average
+  1. Convert from long to wide format 
+  1. Change name of Deciduous and Evergreen shrub column to drop "shrubs" so there are no spaces in the name
 ```{r}
 data_MANOVA_2008 <- Avg_func_quad %>%
   filter(year=="2008" & func_grp!="Standing dead" & func_grp!="Litter" & func_grp!="Bare ground")%>%
@@ -381,88 +408,67 @@ data_MANOVA_2021 <- Avg_func_quad %>%
   select(-sum_func_quad) %>%
   pivot_wider(names_from = func_grp, values_from = avg_quad) %>%
   rename("Deciduous" = "Deciduous shrubs", "Evergreen" = "Evergreen shrubs")
-
-head(data_MANOVA_2008)
 ```
 
-2. Run the MANOVAs
-```{r}
-MANOVA_08<- manova(cbind(Deciduous, Evergreen, Forb, Grass, Lichen, Moss, Sedge) ~ plot, data = data_MANOVA_2008)
-summary.aov(MANOVA_08)
+#### Run the MANOVAs
+```{r, results='hide'}
+#MANOVA_08<- manova(cbind(Deciduous, Evergreen, Forb, Grass, Lichen, Moss, Sedge) ~ plot, data = data_MANOVA_2008)
+#summary.aov(MANOVA_08)
 
-#MANOVA_21<- manova(cbind(Deciduous, Evergreen, Forb, Grass, Lichen, Moss, Sedge) ~ plot, data = data_MANOVA_2021)
-#summary.aov(MANOVA_21)
+MANOVA_21<- manova(cbind(Deciduous, Evergreen, Forb, Grass, Lichen, Moss, Sedge) ~ plot, data = data_MANOVA_2021)
+summary.aov(MANOVA_21)
 ```
 
-3. Post hoc tests 
-  a. followed instructions from [this](https://www.reneshbedre.com/blog/manova.html#post-hoc-test) site
-```{r}
+####Post hoc tests 
 
-posthoc_2008 <- lda(data_MANOVA_2008$plot ~ cbind(Deciduous, Evergreen, Forb, Grass, Lichen, Moss, Sedge))
- 
-dep_vars <- cbind(df$height, df$canopy_vol)
-fit <- manova(dep_vars ~ plant_var, data = df)
+Followed instructions from [this](https://www.reneshbedre.com/blog/manova.html#post-hoc-test) site
+```{r, results='hide'}
 
-post_hoc <- lda(df$plant_var ~ dep_vars, CV=F)
-post_hoc     
+#NOT SURE THIS IS THE RICGHT TEST TO DO/ not sure how to interperate the output
+post_hoc_func_grp <- cbind(data_MANOVA_2008$Deciduous, data_MANOVA_2008$Evergreen, data_MANOVA_2008$Forb, data_MANOVA_2008$Grass, data_MANOVA_2008$Lichen, data_MANOVA_2008$Moss, data_MANOVA_2008$Sedge)
+
+posthoc_2008 <- lda(data_MANOVA_2008$plot ~ post_hoc_func_grp, CV=F)
+ posthoc_2008
+
 ```
 
-## \#\#Scatter plots \~ average rel_cov of species vs other species (all years, not averaged across blocks)
+### Scatter plots 
+**average relative cover of one species vs another (all years, not averaged across blocks)**
 
-\#first we need to transform the data from long to wide format so that each functional groups rel_cov is in a separate column
+#### Prep the data  
 
+First we need to transform the data from long to wide format so that each functional groups rel_cov is in a separate column
+
+  1. Drop the "sum_func_quad"
+  1. Transform from long to wide 
+  1. Change name of Deciduous and Evergreen shrub column to drop "shrubs" so there are no spaces in the name
+  1. Change year to be a character not an integer 
+  1. Replace all the NA values with 0's (NAs were created where no rel cov value was present in a given plot for a given year. [ex: bare ground in the F10 treatment] So we will change these values to be 0s)
 ```{r}
-  #create a column that combines plot and year together to make a new ID for each observation now called "code" BUT also keep     
-  #original columns by setting remove=false
-
-  Scat_prep <- Avg_func_quad %>% unite("code", plot:year, remove = FALSE)
-
-  Scat_prep_func <- Scat_prep[c("code", "avg.1", "func_grp")]
-
-  Scat_prep_yr_plot <- Scat_prep[c("code", "plot", "year", "block")]
-
-  Scat_yr_plot <- unique(Scat_prep_yr_plot) 
-
-  #Transform from long to wide format
-
-    #install.packages("reshape2")
-  library("reshape2")
-
-  Scat_func <- reshape(Scat_prep_func, idvar = "code", timevar = "func_grp", direction = "wide")
-
-  MyMerge       <- function(x, y){
-  df            <- merge(x, y, all = TRUE)
-  rownames(df)  <- df$Row.names
-  df$Row.names  <- NULL
-  return(df)
-  }
+wide_avg_func_quad <- Avg_func_quad %>%
+  select(-sum_func_quad)%>%
+  pivot_wider(names_from = func_grp, values_from = avg_quad)%>%
+  rename("Deciduous" = "Deciduous shrubs", "Evergreen" = "Evergreen shrubs")%>%
+  mutate(year = as.character(year)) %>%
+  mutate_all(~replace_na(.,0))
   
-  wide.Avg_func_quad           <- Reduce(MyMerge, list(Scat_yr_plot, Scat_func))
-  
-  #replace NA values with 0's
-  wide.Avg_func_quad[is.na(wide.Avg_func_quad)] <- 0
-  
-  #change year to be a character string 
-  wide.Avg_func_quad$year <- as.character(wide.Avg_func_quad$year)
-  
-  write.csv(wide.Avg_func_quad, file = "../Derived CSVs/LTER_06MAT_WIDE_avg_quad.csv")
+  write.csv(wide_avg_func_quad, file = "../Derived CSVs/LTER_06MAT_WIDE_avg_quad.csv")
 ```
 
-Now make the graphs...
+#### Create the scatter plots
 
-```{r}
-
+Sedge vs Dec shrub 
+```{r, message=FALSE}
 #specify factor levels for fertilization
-wide.Avg_func_quad$plot <- factor(wide.Avg_func_quad$plot, levels = c("CT","F2","F5","F10"))
+wide_avg_func_quad$plot <- factor(wide_avg_func_quad$plot, levels = c("CT","F2","F5","F10"))
 
-###Bet nan VS Eri Vag
-ggplot(data = wide.Avg_func_quad, aes(x = `avg.1.Deciduous shrubs`, y = `avg.1.Eri vag`, color = plot)) +
+#Deciduous VS Sedge
+ggplot(data = wide_avg_func_quad, aes(x = Deciduous, y = Sedge, color = plot)) +
   scale_color_manual(values = c("CT" = "#d8b365", 
                                 "F2" = "#41b6c4",
                                 "F5" = "#2c7fb8",
                                 "F10" = "#253494"))+
-  geom_point(aes(shape=year, size = 0.25))+
-  scale_shape_manual(values=c(17, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 15))+
+     geom_point()+
   geom_smooth(method = "lm", se = TRUE, aes(fill = plot))+
   scale_fill_manual(values = c("CT" = "#E2C68E", 
                                 "F2" = "#83D1D9",
@@ -476,7 +482,7 @@ panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
   theme( axis.line = element_line(colour = "black", 
                       size = 1, linetype = "solid"))+
   scale_y_continuous(breaks= c(0, 0.15, .3))+
-  labs(y = "E. vaginatum", x = "Deciduous shrubs")+ 
+  labs(y = "Sedge", x = "Deciduous shrubs")+ 
   theme(axis.title.y = element_text(face = "bold"))+
     theme(axis.title.x = element_text(face = "bold"))+
    #stat_regline_equation(label.x= 0.6, label.y= 0.15)+ #adds regression line
@@ -484,17 +490,14 @@ panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
   #stat_cor(method = "pearson", label.x = .5, label.y = .25)+ #adds p-value 
   facet_grid(plot ~ .)
 
-ggsave("../Figures/LTER_06MAT_correlation_decshrubs_Evag.jpeg")
+ggsave("../Figures/LTER_06MAT_correlation_Deciduous_Sedge.jpeg")
 
 ```
 
-```{r}
-test1 <- subset(wide.Avg_func_quad, plot == "CT")
-```
-
-```{r}
-###Bet nan VS Eri Vag (not separated by fert treatment )
-ggplot(data = wide.Avg_func_quad, aes(x = `avg.1.Deciduous shrubs`, y = `avg.1.Eri vag`)) +
+Other graphs:
+```{r, message=FALSE}
+#Deciduous VS Sedge (not separated by fert treatment )
+ggplot(data = wide_avg_func_quad, aes(x = Deciduous, y = Sedge)) +
    geom_point()+
   geom_smooth(method = "lm", se = TRUE)+
    stat_regline_equation(label.x= 0.55, label.y= 0.2)+
@@ -502,8 +505,8 @@ ggplot(data = wide.Avg_func_quad, aes(x = `avg.1.Deciduous shrubs`, y = `avg.1.E
     stat_cor(method = "pearson", label.x = .5, label.y = .25) #adds p-value 
 
 
-###Bet nan VS Forbs
-ggplot(data = wide.Avg_func_quad, aes(x = `avg.1.Deciduous shrubs`, y = `avg.1.Forb`, color = plot)) +
+#Deciduous VS Forbs
+ggplot(data = wide_avg_func_quad, aes(x = Deciduous, y = Forb, color = plot)) +
   scale_color_manual(values = c("CT" = "#d8b365", 
                                 "F2" = "#41b6c4",
                                 "F5" = "#2c7fb8",
@@ -518,8 +521,8 @@ ggplot(data = wide.Avg_func_quad, aes(x = `avg.1.Deciduous shrubs`, y = `avg.1.F
   stat_cor(aes(label=..rr.label..), label.x=0.6, label.y=.1)+
   facet_grid(plot ~ .)
 
-###Eri vag VS Forbs
-ggplot(data = wide.Avg_func_quad, aes(x = `avg.1.Forb`, y = `avg.1.Eri vag`, color = plot)) +
+#Deciduous VS Forbs
+ggplot(data = wide_avg_func_quad, aes(x = Forb, y = Sedge, color = plot)) +
   scale_color_manual(values = c("CT" = "#d8b365", 
                                 "F2" = "#41b6c4",
                                 "F5" = "#2c7fb8",
@@ -547,15 +550,22 @@ stat_cor(method = "pearson", label.x = .2, label.y = .25)+ #adds p-value
   facet_grid(plot ~ .)
 ```
 
-## Format data for PC-ORD
+
+
+
+
+
+
+# Format data for PC-ORD
+*need to edit this code to be more efficient*
 
 "PCORD_func" - functional group listed in wide format with cover listed under it, with "code" defining each sample unit (used as MAIN in PCORD)
 
 "PCORD_yr_plot" - "code" AKA sample unit with other variables "year" and "plot" listed (used as 2nd in PCORD)
 
-```{r}
-#create a column that combines plot and year together to make a new ID for each observation now called "code" BUT also keep original columns by setting remove=false
+#### Create a column that combines plot and year together to make a new ID for each observation now called "code" BUT also keep original columns by setting remove=false
 
+```
 #PCORD_prep <- Avg_func_block %>% unite("code", plot:year, remove = FALSE)
 PCORD_prep <- Avg_func_quad %>% unite("code", plot:year, remove = FALSE) #for data not-averaged across blocks
 
@@ -565,13 +575,11 @@ PCORD_prep_func <- PCORD_prep[c("code", "avg.1", "func_grp")] #for data not-aver
 #PCORD_prep_yr_plot <- PCORD_prep[c("code", "plot", "year")]
 PCORD_prep_yr_plot <- PCORD_prep[c("code", "plot", "year", "block")] #for data not-averaged across blocks
 
-PCORD_yr_plot <- unique(PCORD_prep_yr_plot) 
-
+PCORD_yr_plot <- unique(PCORD_prep_yr_plot)
 ```
 
-\#Transform from long to wide format
-
-```{r}
+#### Transform from long to wide format
+```
 #install.packages("reshape2")
 library("reshape2")
 
@@ -581,7 +589,7 @@ PCORD_WIDE_func <- reshape(PCORD_prep_func, idvar = "code", timevar = "func_grp"
 PCORD_WIDE_func[is.na(PCORD_WIDE_func)] <- 0
 ```
 
-```{r}
+```
 #write.csv(PCORD_WIDE_func, file = "func_cover_PCORD_friendly.csv")
 write.csv(PCORD_WIDE_func, file = "../Derived CSVs/LTER_06MAT_relcov_QUAD_PCORD_friendly.csv")
 
@@ -590,17 +598,15 @@ write.csv(PCORD_yr_plot, file = "../Derived CSVs/LTER_06MAT_yr_plot_QUAD_PCORD_f
 
 ```
 
-Isolate 2008 and 2021 data from data set not averaged across blocks
-
-```{r}
-
+#### Isolate 2008 and 2021 data from data set not averaged across blocks
+```
 PCORD_yr_plot_2008 <- subset(PCORD_yr_plot, year== 2008) 
 PCORD_yr_plot_2021 <- subset(PCORD_yr_plot, year== 2021)
 
 write.csv(PCORD_yr_plot_2008, file = "../Derived CSVs/LTER_O6MAT_yr_plot_QUAD_PCORD_friendly_2008.csv")
 write.csv(PCORD_yr_plot_2021, file = "../Derived CSVs/LTER_06MAT_yr_plot_QUAD_PCORD_friendly_2021.csv")
 
-#--------
+
 Avg_func_quad_2008 <- subset(Avg_func_quad, year== 2008) 
 Avg_func_quad_2021 <- subset(Avg_func_quad, year== 2021) 
 
@@ -618,12 +624,9 @@ PCORD_WIDE_func_2008[is.na(PCORD_WIDE_func_2008)] <- 0
 PCORD_WIDE_func_2021 <- reshape(PCORD_prep_func_2021, idvar = "code", timevar = "func_grp", direction = "wide")
 PCORD_WIDE_func_2021[is.na(PCORD_WIDE_func_2021)] <- 0
 
-#----------
-
 write.csv(PCORD_WIDE_func_2008, file = "../Derived CSVs/LTER_06MAT_func_cover_QUAD_PCORD_friendly_2008.csv")
 write.csv(PCORD_WIDE_func_2021, file = "../Derived CSVs/LTER_06MAT_func_cover_QUAD_PCORD_friendly_2021.csv")
 
 write.csv(PCORD_yr_plot_2008, file = "../Derived CSVs/LTER_06MAT_yr_plot_QUAD_PCORD_friendly_2008.csv")
 write.csv(PCORD_yr_plot_2021, file = "../Derived CSVs/LTER_06MAT_yr_plot_QUAD_PCORD_friendly_2021.csv")
-
 ```
