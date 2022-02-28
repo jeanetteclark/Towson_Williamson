@@ -15,5 +15,3 @@ knitr::opts_chunk$set(echo = TRUE)
 - [Simulated Herbivory](Rmd/Simulated_Herbivory.Rmd)  
 - [LTER_COVER](Rmd/LTER_06MAT_cover_thesis.Rmd)  
 - [Team Vole Cover](Rmd/Team_Vole_cover.Rmd)  
-
-******  
