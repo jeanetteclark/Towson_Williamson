@@ -47,10 +47,6 @@ getwd()
 #setwd()
 ```
 
-
-
-
-
 # Downloading/loading packages
 
 Use `install.packages` to download and install a new R package. You only need to do this once, then you can just use `library()` to load it and be able to call functions within it. and load the package libraries.  
@@ -62,6 +58,7 @@ Use `install.packages` to download and install a new R package. You only need to
 **Note: The order which you install packages is important. Functions with the same names will be masked by packages loaded in after the previous.**  
 Ex: The `select()` function from `MASS` will be masked by `select()` from `dplyar` 
 ```{r, message=FALSE, warning=FALSE}
+library("leaflet")
 library("MASS") #used for post-hoc test (lda)
 library("tidyr")
 library("dplyr")
@@ -69,11 +66,6 @@ library("readr")
 library("ggplot2")
 library("ggpubr")
 ```
-
-
-
-
-
 
 # Data Wrangling
 
@@ -391,7 +383,7 @@ Test for significant differences in rel cover of each species in 2021
 - followed instructions from [this](http://www.sthda.com/english/wiki/manova-test-in-r-multivariate-analysis-of-variance) site
 
 #### Prep the data 
-  1. Filter for only 2021 or 2020 data respectivly
+  1. Filter for only 2021 or 2020 data respectively
   1. Filter out non-living species (Standing dead, Litter, Bare ground)
   1. Drop the column that still contains the sum of cover that you used to get the average
   1. Convert from long to wide format 
@@ -399,16 +391,21 @@ Test for significant differences in rel cover of each species in 2021
 ```{r}
 data_MANOVA_2008 <- Avg_func_quad %>%
   filter(year=="2008" & func_grp!="Standing dead" & func_grp!="Litter" & func_grp!="Bare ground")%>%
-  select(-sum_func_quad) %>%
+  dplyr::select(-sum_func_quad)%>%
   pivot_wider(names_from = func_grp, values_from = avg_quad) %>%
   rename("Deciduous" = "Deciduous shrubs", "Evergreen" = "Evergreen shrubs")
 
 data_MANOVA_2021 <- Avg_func_quad %>%
   filter(year=="2021" & func_grp!="Standing dead" & func_grp!="Litter" & func_grp!="Bare ground")%>%
-  select(-sum_func_quad) %>%
+  dplyr::select(-sum_func_quad) %>%
   pivot_wider(names_from = func_grp, values_from = avg_quad) %>%
   rename("Deciduous" = "Deciduous shrubs", "Evergreen" = "Evergreen shrubs")
 ```
+
+```{r}
+dplyr::select
+```
+
 
 #### Run the MANOVAs
 ```{r, results='hide'}
@@ -423,6 +420,9 @@ summary.aov(MANOVA_21)
 
 Followed instructions from [this](https://www.reneshbedre.com/blog/manova.html#post-hoc-test) site
 ```{r, results='hide'}
+
+TukeyHSD(MANOVA_21, which = "clip")
+
 
 #NOT SURE THIS IS THE RICGHT TEST TO DO/ not sure how to interperate the output
 post_hoc_func_grp <- cbind(data_MANOVA_2008$Deciduous, data_MANOVA_2008$Evergreen, data_MANOVA_2008$Forb, data_MANOVA_2008$Grass, data_MANOVA_2008$Lichen, data_MANOVA_2008$Moss, data_MANOVA_2008$Sedge)
@@ -446,7 +446,7 @@ First we need to transform the data from long to wide format so that each functi
   1. Replace all the NA values with 0's (NAs were created where no rel cov value was present in a given plot for a given year. [ex: bare ground in the F10 treatment] So we will change these values to be 0s)
 ```{r}
 wide_avg_func_quad <- Avg_func_quad %>%
-  select(-sum_func_quad)%>%
+  dplyr::select(-sum_func_quad)%>%
   pivot_wider(names_from = func_grp, values_from = avg_quad)%>%
   rename("Deciduous" = "Deciduous shrubs", "Evergreen" = "Evergreen shrubs")%>%
   mutate(year = as.character(year)) %>%
@@ -462,13 +462,27 @@ Sedge vs Dec shrub
 #specify factor levels for fertilization
 wide_avg_func_quad$plot <- factor(wide_avg_func_quad$plot, levels = c("CT","F2","F5","F10"))
 
+highlight_2008 <- wide_avg_func_quad %>% 
+  filter(year == "2008")
+
+highlight_2021 <- wide_avg_func_quad %>% 
+  filter(year == "2021")
+
+
+
 #Deciduous VS Sedge
 ggplot(data = wide_avg_func_quad, aes(x = Deciduous, y = Sedge, color = plot)) +
   scale_color_manual(values = c("CT" = "#d8b365", 
                                 "F2" = "#41b6c4",
                                 "F5" = "#2c7fb8",
                                 "F10" = "#253494"))+
-     geom_point()+
+  geom_point(shape = 1, size = 1.5)+
+  geom_point(data=highlight_2008, 
+             aes(x=Deciduous,y=Sedge), 
+             shape = 17, size = 2)+
+  geom_point(data=highlight_2021, 
+             aes(x=Deciduous,y=Sedge), 
+             shape=16, size = 2)+
   geom_smooth(method = "lm", se = TRUE, aes(fill = plot))+
   scale_fill_manual(values = c("CT" = "#E2C68E", 
                                 "F2" = "#83D1D9",
@@ -488,6 +502,7 @@ panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
    #stat_regline_equation(label.x= 0.6, label.y= 0.15)+ #adds regression line
   #stat_cor(aes(label=..rr.label..), label.x=0.6, label.y=.1)+ #adds R2 
   #stat_cor(method = "pearson", label.x = .5, label.y = .25)+ #adds p-value 
+  theme(legend.position="bottom")+
   facet_grid(plot ~ .)
 
 ggsave("../Figures/LTER_06MAT_correlation_Deciduous_Sedge.jpeg")
@@ -549,6 +564,21 @@ panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
 stat_cor(method = "pearson", label.x = .2, label.y = .25)+ #adds p-value 
   facet_grid(plot ~ .)
 ```
+
+# Map feild site
+
+```{r}
+locations <- read.csv("../Data/Toolik_location.csv")
+
+head(locations)
+
+leaflet(locations) %>% 
+  addTiles() %>% 
+  addScaleBar() %>%
+  addAwesomeMarkers() %>%
+  addMarkers(lng = ~Long, lat = ~Lat, popup = ~ Location)
+```
+
 
 
 
