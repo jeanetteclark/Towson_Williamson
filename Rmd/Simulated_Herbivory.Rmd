@@ -8,42 +8,64 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-PREPPING DATA
---------------------------------------------------------------------------------
-Clear workspace (if desired/needed)
-```{r}
+```{r, include=FALSE}
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color,
+      x)
+  } else x
+}
+```
+
+`r colorize("words go here", "red")`
+
+# Helpful Tips  
+
+**Useful keyboard shortcuts**
+*these work for windows, they may be different for Macs*
+
+- `Cntrl` + `Z` functions like the Undo button in word or excel. Undoes whatever action you just did
+- `Cntrl` + `Alt` + `I` inserts a new code chunk
+- `Cntrl` + `Enter` runs the code that your courser is on (good for if you want to run small sections of code within a larger code chunk)
+- `Cntrl` + `Shift` + `M` inserts the pipe functions ` %>% `
+- `Cntrl` + `F` allows you to find things within the document (can be useful if you want to replace the name of an object everywhere in the document at the same time)
+- `Cntrl` + `Shift` + `O` opens a document outline that you can use to quickly navigate between titled sections of your document 
+- `Cntrl` + `C` to copy, `Cntrl` + `V` to paste
+- `Cntrl` + `S` to save
+
+Use `rm(list = ls())` to Clear workspace (if desired/needed). If run correctly will clear everything from your environment tab. Typically it's good to do this at the start of each of your sessions. Defiantly should do it if you open a new Rmd file.
+```{r, echo = FALSE}
 rm(list = ls())
 ```
 
-Check working directory, set new working directory if needed. 
-```{r}
-#getwd()
-setwd("C:/Users/willi/OneDrive/Documents/Towson University/Data/Simulated herbivory/QAQCed tiller heights")
+Use this`getwd()` to check working directory. Will most likely be whatever folder your Rmd file is in. If you need to change it for some reason use `setwd()` 
+```{r, echo = FALSE, include=FALSE}
+getwd()
+#setwd()
 ```
 
-Install packages and load the package libraries. **Once you have installed a package, you only need to load the library for future use.**
-```{r}
+# Downloading/loading packages
 
-#install.packages("tidyverse")
+Use `install.packages` to download and install a new R package. You only need to do this once, then you can just use `library()` to load it and be able to call functions within it. and load the package libraries.  
+
+**TIP: It's generally considered best practice to keep the commands to call all the packages you need to use at the top of the document**  
+
+`tidyr`, `dplyr`, and `readr` are probably the most commonly used packages for data wrangling/cleaning.`ggplot2` is very common for creating publication quality figures.  
+
+**Note: The order which you install packages is important. Functions with the same names will be masked by packages loaded in after the previous.**  
+Ex: The `select()` function from `MASS` will be masked by `select()` from `dplyar` 
+```{r, message=FALSE, warning=FALSE}
 library(tidyverse)
-
-#install.packages("ggplot2")
+library(dplyr)
 library("ggplot2")
-#install.packages("agricolae")
-library("agricolae")
-
-#install.packages("ggpubr")
+#library("agricolae")
 library("ggpubr")
 
-#install.packages("ggpubr")
-library(dplyr)
-
-#install.packages("nlme")
-library(nlme)
-
 ```
 
-#load in each years .csv files containing the data. 2021 will be aded after since it already has the new codes
+Load in each years .csv files containing the data. 2021 will be aded after since it already has the new codes
 ```{r}
 #TH_2018 <- read.csv(file.choose(), header = TRUE)
 
@@ -56,8 +78,10 @@ TH_2020 <- read.csv("C:/Users/willi/OneDrive/Documents/Towson University/Data/Si
 TH_2021 <- read.csv("C:/Users/willi/OneDrive/Documents/Towson University/Data/Simulated herbivory/QAQCed tiller heights/2021_tiller_heights_QAQCed.csv", header = TRUE)
 ```
 
-#Then merge the years togeather... **2018-2020 ONLY -- 2021 must be added later as it only has new clipping codes
-**all the names of columns need to be exactly the same name (capitalization and spaces included)
+Then merge the years together  
+*2018-2020 ONLY -- 2021 must be added later as it only has new clipping codes*
+
+**!IMPORTANT!** all the names of columns need to be exactly the same name (capitalization and spaces included)**
 ```{r}
 
 MyMerge       <- function(x, y){
@@ -70,10 +94,10 @@ TH_19_18_20           <- Reduce(MyMerge, list(TH_2018, TH_2019, TH_2020))
 
 ```
 
-!IMPORTANT! -- make sure the number of observations in the merge match the sum of the observations of the individual data set 
+*!IMPORTANT!* Make sure the number of observations in the merge match the sum of the observations of the individual data set 
 
-#look at the data to see what it contains
-```{r}
+Look at the data to see what it contains
+```{r, results='hide'}
 head(TH_19_18_20) #opens first 6 rows
 tail(TH_19_18_20) #opens last 6 rows
 summary(TH_19_18_20)
@@ -81,8 +105,7 @@ str(TH_19_18_20) #tells us what data types (numbers, factors, etc) are in the da
 ```
 
 Check unique vales in each column to make sure that there are not naming errors 
-```{r}
-
+```{r, results='hide'}
 unique(TH_19_18_20$date)
 unique(TH_19_18_20$block)
 unique(TH_19_18_20$plot)
@@ -90,7 +113,6 @@ unique(TH_19_18_20$old_id)
 unique(TH_19_18_20$rep)
 #unique(TH_19_18_20$t_num)
 #unique(TH_19_18_20$g_ht)
-
 ```
 
 Remove or rename -- important step! EX: 18 observations in the merge were labeled "F10 " instead of "F10". This ment when the data is subset, the "F10 " observations would be lost if not corrected for 
@@ -581,19 +603,21 @@ ggplot(data = ht.avg.block, aes(x = d_sub2, y = avg_t_ht3, ymin = avg_t_ht3-std_
                                 "F10" = "#253494"))+
   
   theme_light()+
-  theme(aspect.ratio = 9/18.5)+ #use for vertical stack only
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
-  theme(axis.text.x = element_text(color = "black", size = 8, angle = 45, hjust = 1))+
-  theme(axis.text.y = element_text(color = "black", size = 8))+
-  theme( axis.line = element_line(colour = "black", 
-                      size = 1, linetype = "solid"))+
-  theme(plot.title = element_text(hjust = .5))+
-  geom_vline(xintercept = 4.5)+
-  geom_vline(xintercept = 8.5)+
-  geom_vline(xintercept = 9.5)+
-  geom_hline(yintercept = 15, linetype=2)+
-  scale_x_continuous(breaks= c(2, 4, 6, 8, 10, 12), labels = c("2" = "7/13/18", "4" = "7/30/18", "6" = "7/06/19", 
-                                                               "8" = "8/02/19", "10" = "6/19/21", "12" = "7/21/21"))+
+  theme(aspect.ratio = 9/18.5, 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        axis.text.x = element_text(color = "black", size = 8, angle = 45, hjust = 1),
+        axis.text.y = element_text(color = "black", size = 8),
+        axis.line = element_line(colour = "black", linetype = "solid"), 
+        legend.position="none",
+        plot.title = element_text(hjust = .5))+
+  geom_hline(yintercept = 15, color="#D0CECE")+
+  geom_vline(xintercept = 4.5, color="#D0CECE")+
+  geom_vline(xintercept = 8.5, color="#D0CECE")+
+  geom_vline(xintercept = 9.5, color="#D0CECE")+
+  
+  scale_x_continuous(breaks= c(2, 4, 6, 8, 10, 12), labels = c("2" = "7/13", "4" = "7/30", "6" = "7/06", 
+                                                               "8" = "8/02", "10" = "6/19", "12" = "7/21"))+
   geom_errorbar(width = .25)+
   geom_line(size = .75) +
   geom_point(size = 1.25) + 
@@ -602,7 +626,7 @@ ggplot(data = ht.avg.block, aes(x = d_sub2, y = avg_t_ht3, ymin = avg_t_ht3-std_
    # theme(axis.title.x = element_text(face = "bold"))+
   guides(color=guide_legend(" "))+
   #theme(legend.position="bottom")+
-  facet_grid(clip ~ .) #vertically stacked
+  facet_grid( clip ~ .) #vertically stacked
   #facet_grid( ~ clip)  #horizontally stacked
 
 
@@ -723,7 +747,7 @@ PG_all$d_sub2 <- recode(PG_all$d_sub2, "4" = "2018", "8" = "2019", "9" = "2020",
      theme(axis.text.y = element_text(color = "black", size = 8))+
      theme(aspect.ratio = 9/18.5)+
      facet_grid(clip ~ .)
-      ggsave("2018_boxplot.jpeg")
+   
  
 ## 2019 ##
   PG2019$plot <- factor(PG2019$plot, levels = c("CT", "F2", "F5", "F10"))
@@ -745,7 +769,7 @@ PG_all$d_sub2 <- recode(PG_all$d_sub2, "4" = "2018", "8" = "2019", "9" = "2020",
      theme(axis.text.y = element_text(color = "black", size = 8))+
      theme(aspect.ratio = 9/18.5)+
      facet_grid(clip ~ .)
-            ggsave("2019_boxplot.jpeg")
+           
 
 ## 2020 ##
   PG2020$plot <- factor(PG2020$plot, levels = c("CT", "F2", "F5", "F10"))
@@ -767,7 +791,7 @@ PG_all$d_sub2 <- recode(PG_all$d_sub2, "4" = "2018", "8" = "2019", "9" = "2020",
      theme(axis.text.y = element_text(color = "black", size = 8))+
      theme(aspect.ratio = 9/18.5)+
      facet_grid(clip ~ .)
-            ggsave("2020_boxplot.jpeg")
+          
   
 ## 2021 ##
   PG2021$plot <- factor(PG2021$plot, levels = c("CT", "F2", "F5", "F10"))
@@ -789,7 +813,7 @@ PG_all$d_sub2 <- recode(PG_all$d_sub2, "4" = "2018", "8" = "2019", "9" = "2020",
      theme(axis.text.y = element_text(color = "black", size = 8))+
      theme(aspect.ratio = 9/18.5)+
      facet_grid(clip ~ .)
-            ggsave("2021_boxplot.jpeg")
+          
 ```  
   
   
@@ -831,31 +855,22 @@ int.21 <- interaction.plot(PG2021$plot, PG2021$clip, PG2021$avg_t_ht1,
   Step 4 - Run ANOVA's for each year
 ```{r}
 
-ANOVA_18<- aov(avg_t_ht1 ~ block + clip + plot + clip:plot, data = PG2018)
-summary(ANOVA_18)
+#ANOVA_18<- aov(avg_t_ht1 ~ block + clip + plot + clip:plot, data = PG2018)
+#summary(ANOVA_18)
 
-ANOVA_19<- aov(avg_t_ht1 ~ block + clip + plot + clip:plot, data = PG2019)
-summary(ANOVA_19)
+#ANOVA_19<- aov(avg_t_ht1 ~ block + clip + plot + clip:plot, data = PG2019)
+#summary(ANOVA_19)
 
-ANOVA_20<- aov(avg_t_ht1 ~ block + clip + plot + clip:plot, data = PG2020)
-summary(ANOVA_20)
+#ANOVA_20<- aov(avg_t_ht1 ~ block + clip + plot + clip:plot, data = PG2020)
+#summary(ANOVA_20)
 
 ANOVA_21<- aov(avg_t_ht1 ~ block + clip + plot + clip:plot, data = PG2021)
 summary(ANOVA_21)
-
-
 ```
   
   Step 5 - Tukeys test
 ```{r}
-
-#TukeyHSD(ANOVA_18, which = "plot")
-
-#TukeyHSD(ANOVA_19, which = "clip")
-
-#TukeyHSD(ANOVA_20, which = "clip")
-
-TukeyHSD(ANOVA_21, which = "plot")
+TukeyHSD(ANOVA_21, which = "clip:plot")
 ```
   
   Step 6 - check assumptions 
@@ -902,7 +917,31 @@ PG_all_avgs <- (PG_all) %>% group_by(d_sub2, plot, clip) %>% summarise_at(vars(a
   
 ggsave("finalheights_all.jpeg")
 ```
-    
+
+```{r}
+PG_all$plot <- factor(PG_all$plot, levels = c("CT", "F2", "F5", "F10"))
+  PG_all$clip <- factor(PG_all$clip, levels = c("CT", "PU", "PR"))
+
+  BoxPlotall <- ggplot(PG_all, aes(x= d_sub2, y=avg_t_ht1, fill = plot))+
+    geom_hline(yintercept = 15, color="#D0CECE")+
+      geom_boxplot(position=position_dodge(.85))+
+      scale_fill_manual(values=c("#E1BA15", "#41b6c4", "#2c7fb8", "#253494"))+
+     theme_light()+
+     scale_y_continuous(limits = c(2.5,23), breaks=seq(0,25,5))+
+     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+     theme(axis.title.y = element_text(face = "bold"))+
+     theme(axis.title.x = element_text(face = "bold"))+
+     theme(plot.title = element_text(hjust = .5))+
+     theme(axis.text.x = element_text(color = "black", size = 8, angle = 45, hjust = 1))+
+     theme(axis.text.y = element_text(color = "black", size = 8))+
+     theme(aspect.ratio = 9/18.5)+
+  labs(y = "Mean final tiller height (cm)", x = "")+
+    #theme(legend.position="bottom")+
+     facet_grid(clip ~ .)
+  
+ggsave("finalheights_all_BOXPLOT.jpeg")
+```
+
  
 
 STATISTICS III
