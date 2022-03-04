@@ -20,8 +20,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 [Team vole graphics](Rmd/Team_vole_graphics.html)  
 
-[Summer 2021 feild photos](Rmd/summer_2021_feild_photos.html)
-
 [LTER graphics](Rmd/LTER_graphics.html)
 
 ### Thesis -- codes for cleaning and analyzing datasets:   
