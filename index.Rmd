@@ -7,8 +7,10 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r, include=FALSE}
+#<img src="Images/TheBoys_HerbivoryTransect.jpg" class="center">
+```
 
-<img src="Images/TheBoys_HerbivoryTransect.jpg" class="center">
 
 ## Helpful tutorials:  
 
