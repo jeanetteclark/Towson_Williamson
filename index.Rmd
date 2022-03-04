@@ -13,19 +13,24 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Helpful tutorials:  
 
-[Shareable leaflet map code](Rmd/Sharable-map-code.html)    
+[Shareable leaflet map code](Rmd/Sharable-map-code.Rmd)    
 
 ### Fun graphics/pictures:  
 
-[Team vole graphics](Rmd/Team_vole_graphics.html)  
+[Team vole graphics](Rmd/Team_vole_graphics.Rmd)  
 
-[LTER graphics](Rmd/LTER_graphics.html)
+[LTER graphics](Rmd/LTER_graphics.Rmd)
 
 ## Thesis codes:  
 
-[Simulated Herbivory](Rmd/Simulated_Herbivory.html)  
+[LTER MAT Plant Cover](Rmd/LTER_06MAT_cover_thesis.Rmd)
 
 
-[Toolik Team Vole Plant Cover](Rmd/Team_Vole_cover.html)
+[Simulated Herbivory](Rmd/Simulated_Herbivory.Rmd)  
+
+
+[Toolik Team Vole Plant Cover](Rmd/Team_Vole_cover.Rmd)
+
+
 
 <img src="Images/mountains.png" class="center">
