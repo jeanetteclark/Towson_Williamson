@@ -25,7 +25,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 [Simulated Herbivory](Rmd/Simulated_Herbivory.html)  
 
-[LTER 06MAT Plant Cover](Rmd/LTER_06MAT_cover_thesis.html)  
 
 [Toolik Team Vole Plant Cover](Rmd/Team_Vole_cover.html)
 
