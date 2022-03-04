@@ -23,14 +23,6 @@ colorize <- function(x, color) {
 - nwilli51@students.towson.edu  
 
 
-```{r, include=FALSE}
-library("xfun")
-```
-
-```{r, echo=FALSE}
-xfun::embed_files(c('../Images/Tundra_model.png', '../Images/Team_vole_experimental_design.png', '../Images/Vole_activity.png'), text = 'Click HERE to download images')
-```  
-
 
 
 ### Figure 1:

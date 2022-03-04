@@ -1,7 +1,5 @@
 ---
 title: "Summer 2021 feild photos"
-author: "Nicole"
-date: "3/4/2022"
 output: html_document
 ---
 
@@ -10,68 +8,48 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r, include=FALSE}
-library("xfun")
-```
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color,
+      x)
+  } else x
+}
+```  
+
+`r colorize("*All photos were taken by **Nicole Williamson**. Please notify creator before using, and cite credit for the work accordinly.*", "Red")`  
+
+- nwilli51@students.towson.edu  
+
+
 
 
 <img src="../Images/Vole_moss.jpg" class="center"> 
 
-```{r, echo=FALSE}
-xfun::embed_file('../Images/Vole_moss.jpg', text = 'Click HERE to download image')
-```   
-
 
 <img src="../Images/Vole_Nick_release.jpg" class="center"> 
-```{r, echo=FALSE}
-xfun::embed_file('../Images/Vole_Nick_release.jpg', text = 'Click HERE to download image')
-```   
 
 
 <img src="../Images/Vole_Jess_hand.jpg" class="center"> 
-```{r, echo=FALSE}
-xfun::embed_file('../Images/Vole_Jess_hand.jpg', text = 'Click HERE to download image')
-```   
 
 
 <img src="../Images/Vole_Nick_hand.jpg" class="center"> 
-```{r, echo=FALSE}
-xfun::embed_file('../Images/Vole_Nick_hand.jpg', text = 'Click HERE to download image')
-```  
 
 
-  <img src="../Images/Lauren_Jess_HerbivoryTransect.jpg" class="center"> 
-```{r, echo=FALSE}
-xfun::embed_file('../Images/Lauren_Jess_HerbivoryTransect.jpg', text = 'Click HERE to download image')
-```    
+<img src="../Images/Lauren_Jess_HerbivoryTransect.jpg" class="center"> 
 
 
 <img src="../Images/TheBoys_HerbivoryTransect.jpg" class="center"> 
-```{r, echo=FALSE}
-xfun::embed_file('../Images/TheBoys_HerbivoryTransect.jpg', text = 'Click HERE to download image')
-```  
 
 
 <img src="../Images/Jess_Earl_Sourcing.jpg" class="center"> 
-```{r, echo=FALSE}
-xfun::embed_file('../Images/Jess_Earl_Sourcing.jpg', text = 'Click HERE to download image')
-```  
 
 
 <img src="../Images/Jess_Lauren_MidnightSun.jpg" class="center"> 
-```{r, echo=FALSE}
-xfun::embed_file('../Images/Jess_Lauren_MidnightSun.jpg', text = 'Click HERE to download image')
-```  
 
-
-<img src="../Images/Lauren_MidnightSun.jpg" class="center"> 
-```{r, echo=FALSE}
-xfun::embed_file('../Images/Lauren_MidnightSun.jpg', text = 'Click HERE to download image')
-```  
 
 
 <img src="../Images/Ian_Ruby_Miriam_Greenhouse.jpg" class="center"> 
-```{r, echo=FALSE}
-xfun::embed_file('../Images/Ian_Ruby_Miriam_Greenhouse.jpg', text = 'Click HERE to download image')
-```  
 
 

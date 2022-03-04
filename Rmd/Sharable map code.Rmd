@@ -2,15 +2,12 @@
 title: "Sharable site map code"
 author: "Nicole Williamson"
 date: "3/4/2022"
-output: html_document
+output:  
+html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r, include=FALSE}
-library("xfun")
 ```
 
 ```{r, include=FALSE}
@@ -34,15 +31,10 @@ library("leaflet")
 
 ### Load in data 
 
-- I embed a download link for my csv file and images so you can download it and use it as a test run if you need practice. It should work with the code below as long as the directories match to where ever you download the data to.
-```{r, echo=FALSE}
-xfun::embed_file('../Data/Toolik_location.csv', text = 'Download loaction data HERE')
+```{r, message=FALSE, error=FALSE}
+toolik_locations <- read.csv("../Data/Toolik_location.csv") #load in file 
 ```
   
-```{r, echo=FALSE}
-xfun::embed_files(c('../Images/b1.png', '../Images/b2.png', '../Images/b3.png'), text = 'Download icon images HERE')
-```
-
 ### Create the map 
 
 This will create a basic map with your site locations marked...  
@@ -73,5 +65,4 @@ You can do lots of cool things to customize your map. `r colorize("For more info
 
 
 ### Hope you find this helpful!
-
 

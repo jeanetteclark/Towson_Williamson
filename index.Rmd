@@ -7,14 +7,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r, include=FALSE}
-#<img src="Images/TheBoys_HerbivoryTransect.jpg" class="center">
-```
+
+<img src="Images/TheBoys_HerbivoryTransect.jpg" class="center">
 
 
 ## Helpful tutorials:  
 
-[Sharable leaflet map code](Rmd/Sharable-map-code.html)    
+[Shareable leaflet map code](Rmd/Sharable-map-code.html)    
 
 ### Fun graphics/pictures:  
 
@@ -22,5 +21,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 [LTER graphics](Rmd/LTER_graphics.html)
 
+## Thesis codes:  
+
+[Simulated Herbivory](Rmd/Simulated_Herbivory.html)  
+
+[LTER 06MAT Plant Cover](Rmd/LTER_06MAT_cover_thesis.html)  
+
+[Toolik Team Vole Plant Cover](Rmd/Team_Vole_cover.html)
 
 <img src="Images/mountains.png" class="center">
