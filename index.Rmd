@@ -23,8 +23,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Thesis codes:  
 
-[LTER MAT Plant Cover](Rmd/LTER_06MAT_cover_thesis.Rmd)
-
 
 [Simulated Herbivory](Rmd/Simulated_Herbivory.Rmd)  
 
