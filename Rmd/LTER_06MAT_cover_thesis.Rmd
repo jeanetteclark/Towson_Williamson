@@ -421,14 +421,14 @@ summary.aov(MANOVA_21)
 Followed instructions from [this](https://www.reneshbedre.com/blog/manova.html#post-hoc-test) site
 ```{r, results='hide'}
 
-TukeyHSD(MANOVA_21, which = "clip")
+#TukeyHSD(MANOVA_21, which = "clip")
 
 
 #NOT SURE THIS IS THE RICGHT TEST TO DO/ not sure how to interperate the output
-post_hoc_func_grp <- cbind(data_MANOVA_2008$Deciduous, data_MANOVA_2008$Evergreen, data_MANOVA_2008$Forb, data_MANOVA_2008$Grass, data_MANOVA_2008$Lichen, data_MANOVA_2008$Moss, data_MANOVA_2008$Sedge)
+#post_hoc_func_grp <- cbind(data_MANOVA_2008$Deciduous, data_MANOVA_2008$Evergreen, data_MANOVA_2008$Forb, data_MANOVA_2008$Grass, data_MANOVA_2008$Lichen, data_MANOVA_2008$Moss, data_MANOVA_2008$Sedge)
 
-posthoc_2008 <- lda(data_MANOVA_2008$plot ~ post_hoc_func_grp, CV=F)
- posthoc_2008
+#posthoc_2008 <- lda(data_MANOVA_2008$plot ~ post_hoc_func_grp, CV=F)
+ #posthoc_2008
 
 ```
 
@@ -565,7 +565,7 @@ stat_cor(method = "pearson", label.x = .2, label.y = .25)+ #adds p-value
   facet_grid(plot ~ .)
 ```
 
-# Map feild site
+# Map feild site locations
 
 ```{r}
 locations <- read.csv("../Data/Toolik_location.csv")
@@ -573,9 +573,8 @@ locations <- read.csv("../Data/Toolik_location.csv")
 head(locations)
 
 leaflet(locations) %>% 
-  addTiles() %>% 
+  addTiles() %>%
   addScaleBar() %>%
-  addAwesomeMarkers() %>%
   addMarkers(lng = ~Long, lat = ~Lat, popup = ~ Location)
 ```
 

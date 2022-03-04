@@ -1,0 +1,77 @@
+---
+title: "Sharable site map code"
+author: "Nicole Williamson"
+date: "3/4/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+library("xfun")
+```
+
+```{r, include=FALSE}
+colorize <- function(x, color) {
+  if (knitr::is_latex_output()) {
+    sprintf("\\textcolor{%s}{%s}", color, x)
+  } else if (knitr::is_html_output()) {
+    sprintf("<span style='color: %s;'>%s</span>", color,
+      x)
+  } else x
+}
+```
+
+
+## Install and load in leaflet packedge 
+```{r, message=FALSE, warning=FALSE}
+library("leaflet")
+```
+
+# Basic map example:  
+
+### Load in data 
+
+- I embed a download link for my csv file and images so you can download it and use it as a test run if you need practice. It should work with the code below as long as the directories match to where ever you download the data to.
+```{r, echo=FALSE}
+xfun::embed_file('../Data/Toolik_location.csv', text = 'Download loaction data HERE')
+```
+  
+```{r, echo=FALSE}
+xfun::embed_files(c('../Images/b1.png', '../Images/b2.png', '../Images/b3.png'), text = 'Download icon images HERE')
+```
+
+### Create the map 
+
+This will create a basic map with your site locations marked...  
+
+  **NOTE: `popup = ~ Locations` adds labels to the markers when you click on them**  
+```{r, message=FALSE}
+toolik_locations <- read.csv("../Data/Toolik_location.csv") #load in file 
+head(toolik_locations) #inspect file
+
+
+leaflet(toolik_locations) %>% 
+  addTiles() %>% 
+  addScaleBar()%>%
+  addMarkers(lng = ~Long, lat = ~Lat, popup = ~ Location)
+```
+  
+You can do lots of cool things to customize your map. `r colorize("For more information on how to do these things and more, check out [THIS SITE.](https://rstudio.github.io/leaflet/)", "red")`
+
+- specify the area of the map that shows automatically 
+- change marker colors based on site features 
+- change marker icon to a personalized image
+- add a scale bar
+- add a legend 
+- customize marker labels and embed links 
+  - you could potentially embed a link to data generated from that site  
+  
+`r colorize("**If you figure out how to do different colors for different sites or any other cool customizations I would love to see it! I want to assign a different custom icon (the icon images I embeded earlier) to each of my sites but I cant figure out how to do it. So if you do anything similar, please share! :) **", "Blue")`  
+
+
+### Hope you find this helpful!
+
+

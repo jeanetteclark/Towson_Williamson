@@ -1,5 +1,5 @@
 ---
-title: "Nicole's Master Thesis - Towson Univerity"
+title: "Nicole's website for all things Thesis"
 output: html_document
 ---
 
@@ -10,8 +10,25 @@ knitr::opts_chunk$set(echo = TRUE)
 
 <img src="Images/TheBoys_HerbivoryTransect.jpg" class="center">
 
-### Links to Rmd files:  
+## Helpful tutorials:  
 
-- [Simulated Herbivory](Rmd/Simulated_Herbivory.Rmd)  
-- [LTER_COVER](Rmd/LTER_06MAT_cover_thesis.Rmd)  
-- [Team Vole Cover](Rmd/Team_Vole_cover.Rmd)  
+[Sharable leaflet map code](Rmd/Sharable-map-code.html)    
+
+### Fun graphics/pictures:  
+
+[Team vole graphics](Rmd/Team_vole_graphics.html)  
+
+[Summer 2021 feild photos](Rmd/summer_2021_feild_photos.html)
+
+[LTER graphics](Rmd/LTER_graphics.html)
+
+### Thesis -- codes for cleaning and analyzing datasets:   
+
+[Simulated Herbivory](Rmd/Simulated_Herbivory.html)  
+
+[LTER_COVER](Rmd/LTER_06MAT_cover_thesis.html)  
+
+[Team Vole Cover](Rmd/Team_Vole_cover.html) 
+
+
+<img src="Images/mountains.png" class="center">

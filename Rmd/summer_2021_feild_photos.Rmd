@@ -1,0 +1,77 @@
+---
+title: "Summer 2021 feild photos"
+author: "Nicole"
+date: "3/4/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+library("xfun")
+```
+
+
+<img src="../Images/Vole_moss.jpg" class="center"> 
+
+```{r, echo=FALSE}
+xfun::embed_file('../Images/Vole_moss.jpg', text = 'Click HERE to download image')
+```   
+
+
+<img src="../Images/Vole_Nick_release.jpg" class="center"> 
+```{r, echo=FALSE}
+xfun::embed_file('../Images/Vole_Nick_release.jpg', text = 'Click HERE to download image')
+```   
+
+
+<img src="../Images/Vole_Jess_hand.jpg" class="center"> 
+```{r, echo=FALSE}
+xfun::embed_file('../Images/Vole_Jess_hand.jpg', text = 'Click HERE to download image')
+```   
+
+
+<img src="../Images/Vole_Nick_hand.jpg" class="center"> 
+```{r, echo=FALSE}
+xfun::embed_file('../Images/Vole_Nick_hand.jpg', text = 'Click HERE to download image')
+```  
+
+
+  <img src="../Images/Lauren_Jess_HerbivoryTransect.jpg" class="center"> 
+```{r, echo=FALSE}
+xfun::embed_file('../Images/Lauren_Jess_HerbivoryTransect.jpg', text = 'Click HERE to download image')
+```    
+
+
+<img src="../Images/TheBoys_HerbivoryTransect.jpg" class="center"> 
+```{r, echo=FALSE}
+xfun::embed_file('../Images/TheBoys_HerbivoryTransect.jpg', text = 'Click HERE to download image')
+```  
+
+
+<img src="../Images/Jess_Earl_Sourcing.jpg" class="center"> 
+```{r, echo=FALSE}
+xfun::embed_file('../Images/Jess_Earl_Sourcing.jpg', text = 'Click HERE to download image')
+```  
+
+
+<img src="../Images/Jess_Lauren_MidnightSun.jpg" class="center"> 
+```{r, echo=FALSE}
+xfun::embed_file('../Images/Jess_Lauren_MidnightSun.jpg', text = 'Click HERE to download image')
+```  
+
+
+<img src="../Images/Lauren_MidnightSun.jpg" class="center"> 
+```{r, echo=FALSE}
+xfun::embed_file('../Images/Lauren_MidnightSun.jpg', text = 'Click HERE to download image')
+```  
+
+
+<img src="../Images/Ian_Ruby_Miriam_Greenhouse.jpg" class="center"> 
+```{r, echo=FALSE}
+xfun::embed_file('../Images/Ian_Ruby_Miriam_Greenhouse.jpg', text = 'Click HERE to download image')
+```  
+
+
