@@ -419,18 +419,6 @@ summary.aov(MANOVA_21)
 ####Post hoc tests 
 
 Followed instructions from [this](https://www.reneshbedre.com/blog/manova.html#post-hoc-test) site
-```{r, results='hide'}
-
-#TukeyHSD(MANOVA_21, which = "clip")
-
-
-#NOT SURE THIS IS THE RICGHT TEST TO DO/ not sure how to interperate the output
-#post_hoc_func_grp <- cbind(data_MANOVA_2008$Deciduous, data_MANOVA_2008$Evergreen, data_MANOVA_2008$Forb, data_MANOVA_2008$Grass, data_MANOVA_2008$Lichen, data_MANOVA_2008$Moss, data_MANOVA_2008$Sedge)
-
-#posthoc_2008 <- lda(data_MANOVA_2008$plot ~ post_hoc_func_grp, CV=F)
- #posthoc_2008
-
-```
 
 ### Scatter plots 
 **average relative cover of one species vs another (all years, not averaged across blocks)**
@@ -578,84 +566,3 @@ leaflet(locations) %>%
   addMarkers(lng = ~Long, lat = ~Lat, popup = ~ Location)
 ```
 
-
-
-
-
-
-
-
-# Format data for PC-ORD
-*need to edit this code to be more efficient*
-
-"PCORD_func" - functional group listed in wide format with cover listed under it, with "code" defining each sample unit (used as MAIN in PCORD)
-
-"PCORD_yr_plot" - "code" AKA sample unit with other variables "year" and "plot" listed (used as 2nd in PCORD)
-
-#### Create a column that combines plot and year together to make a new ID for each observation now called "code" BUT also keep original columns by setting remove=false
-
-```
-#PCORD_prep <- Avg_func_block %>% unite("code", plot:year, remove = FALSE)
-PCORD_prep <- Avg_func_quad %>% unite("code", plot:year, remove = FALSE) #for data not-averaged across blocks
-
-#PCORD_prep_func <- PCORD_prep[c("code", "avg.2", "func_grp")]
-PCORD_prep_func <- PCORD_prep[c("code", "avg.1", "func_grp")] #for data not-averaged across blocks
-
-#PCORD_prep_yr_plot <- PCORD_prep[c("code", "plot", "year")]
-PCORD_prep_yr_plot <- PCORD_prep[c("code", "plot", "year", "block")] #for data not-averaged across blocks
-
-PCORD_yr_plot <- unique(PCORD_prep_yr_plot)
-```
-
-#### Transform from long to wide format
-```
-#install.packages("reshape2")
-library("reshape2")
-
-PCORD_WIDE_func <- reshape(PCORD_prep_func, idvar = "code", timevar = "func_grp", direction = "wide")
-
-#replace NA's with 0's  
-PCORD_WIDE_func[is.na(PCORD_WIDE_func)] <- 0
-```
-
-```
-#write.csv(PCORD_WIDE_func, file = "func_cover_PCORD_friendly.csv")
-write.csv(PCORD_WIDE_func, file = "../Derived CSVs/LTER_06MAT_relcov_QUAD_PCORD_friendly.csv")
-
-#write.csv(PCORD_yr_plot, file = "yr_plot_PCORD_friendly.csv")
-write.csv(PCORD_yr_plot, file = "../Derived CSVs/LTER_06MAT_yr_plot_QUAD_PCORD_friendly.csv")
-
-```
-
-#### Isolate 2008 and 2021 data from data set not averaged across blocks
-```
-PCORD_yr_plot_2008 <- subset(PCORD_yr_plot, year== 2008) 
-PCORD_yr_plot_2021 <- subset(PCORD_yr_plot, year== 2021)
-
-write.csv(PCORD_yr_plot_2008, file = "../Derived CSVs/LTER_O6MAT_yr_plot_QUAD_PCORD_friendly_2008.csv")
-write.csv(PCORD_yr_plot_2021, file = "../Derived CSVs/LTER_06MAT_yr_plot_QUAD_PCORD_friendly_2021.csv")
-
-
-Avg_func_quad_2008 <- subset(Avg_func_quad, year== 2008) 
-Avg_func_quad_2021 <- subset(Avg_func_quad, year== 2021) 
-
-PCORD_prep_2008 <- Avg_func_quad_2008 %>% unite("code", year:plot, remove = FALSE)
-PCORD_prep_2021 <- Avg_func_quad_2021 %>% unite("code", year:plot, remove = FALSE)
-
-PCORD_prep_func_2008 <- PCORD_prep_2008[c("code", "avg.1", "func_grp")]
-PCORD_prep_func_2021 <- PCORD_prep_2021[c("code", "avg.1", "func_grp")]
-
-library("reshape2")
-
-PCORD_WIDE_func_2008 <- reshape(PCORD_prep_func_2008, idvar = "code", timevar = "func_grp", direction = "wide")
-PCORD_WIDE_func_2008[is.na(PCORD_WIDE_func_2008)] <- 0
-
-PCORD_WIDE_func_2021 <- reshape(PCORD_prep_func_2021, idvar = "code", timevar = "func_grp", direction = "wide")
-PCORD_WIDE_func_2021[is.na(PCORD_WIDE_func_2021)] <- 0
-
-write.csv(PCORD_WIDE_func_2008, file = "../Derived CSVs/LTER_06MAT_func_cover_QUAD_PCORD_friendly_2008.csv")
-write.csv(PCORD_WIDE_func_2021, file = "../Derived CSVs/LTER_06MAT_func_cover_QUAD_PCORD_friendly_2021.csv")
-
-write.csv(PCORD_yr_plot_2008, file = "../Derived CSVs/LTER_06MAT_yr_plot_QUAD_PCORD_friendly_2008.csv")
-write.csv(PCORD_yr_plot_2021, file = "../Derived CSVs/LTER_06MAT_yr_plot_QUAD_PCORD_friendly_2021.csv")
-```
